@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>分冊單元單字本 · 閱讀 · 測驗 · 單字書</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 16px 10px 30px;
+        }
+        .app {
+            max-width: 550px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            padding: 20px 18px 28px;
+        }
+        h1 { font-size: 1.7rem; font-weight: 600; color: #1e293b; margin-bottom: 8px; }
+        .top-bar { margin-bottom: 15px; }
+        .book-select {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 30px;
+            border: 1.5px solid #d1d5db;
+            background: white;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        .unit-panel {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+        }
+        .unit-title { font-weight: 600; margin-bottom: 8px; }
+        .unit-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 20px;
+        }
+        .unit-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mode-switch {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .mode-btn {
+            flex: 1;
+            background: #eef2ff;
+            border: none;
+            padding: 12px 0;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+            border: 1px solid #dbe7f2;
+            text-align: center;
+        }
+        .mode-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 8px 0 16px;
+        }
+        .mark-filter {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f1f5f9;
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+        .card {
+            background: #fff;
+            border-radius: 28px;
+            padding: 24px 20px;
+            margin: 12px 0 20px;
+            border: 1px solid #edf2f7;
+            box-shadow: 0 8px 20px -6px rgba(0,0,0,0.1);
+        }
+        .word-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .english-word {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #0f172a;
+            word-break: break-word;
+        }
+        .mark-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #cbd5e1;
+            padding: 0 8px;
+        }
+        .mark-btn.marked { color: #eab308; }
+        .chinese-block {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 8px 0 4px;
+        }
+        .collocation {
+            font-size: 1rem;
+            color: #64748b;
+            margin-bottom: 20px;
+            border-left: 4px solid #94a3b8;
+            padding-left: 14px;
+            background: #f8fafc;
+            border-radius: 0 12px 12px 0;
+            white-space: pre-wrap;
+        }
+        .action-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .btn {
+            flex: 1;
+            background: #f1f5f9;
+            border: none;
+            padding: 16px;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+        .btn-primary { background: #2563eb; color: white; border: none; }
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 16px 0 8px;
+            color: #475569;
+        }
+        .spell-input {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.3rem;
+            border: 2px solid #dbe7f2;
+            border-radius: 28px;
+            outline: none;
+        }
+        .feedback { min-height: 38px; margin-top: 10px; }
+        .correct { color: #0d9488; } .wrong { color: #dc2626; }
+        .word-list {
+            max-height: 450px;
+            overflow-y: auto;
+            border-radius: 24px;
+            background: #f8fafc;
+            padding: 8px;
+        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            gap: 8px;
+        }
+        .list-item .info { flex: 1; }
+        .list-item .word { font-weight: 700; }
+        .small-btn {
+            background: none;
+            border: 1px solid #cbd5e1;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .batch-area {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f1f5f9;
+            border-radius: 24px;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 20px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+        }
+        .filter-select {
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid #cbd5e1;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <h1>分冊單元單字本</h1>
+
+    <!-- 冊別選擇 -->
+    <div class="top-bar">
+        <select id="bookSelect" class="book-select">
+            <option value="Book1" selected>第一冊 (U1~U6)</option>
+            <option value="Book2">第二冊</option>
+            <option value="Book3">第三冊</option>
+            <option value="Book4">第四冊</option>
+            <option value="Book5">第五冊</option>
+            <option value="Book6">第六冊</option>
+        </select>
+    </div>
+
+    <!-- 單元勾選區域 (用於閱讀與測驗模式) -->
+    <div class="unit-panel" id="unitPanel">
+        <div class="unit-title">選擇單元 (可複選)</div>
+        <div class="unit-checkboxes" id="unitCheckboxes"></div>
+        <div style="margin-top:8px; font-size:0.85rem; color:#64748b;" id="unitSummary"></div>
+    </div>
+
+    <!-- 模式切換 -->
+    <div class="mode-switch">
+        <div class="mode-btn active" data-mode="read">閱讀模式</div>
+        <div class="mode-btn" data-mode="quiz">測驗模式</div>
+        <div class="mode-btn" data-mode="book">單字書</div>
+    </div>
+
+    <!-- 測驗專用篩選 -->
+    <div id="quizFilterRow" class="filter-row" style="display: none;">
+        <label class="mark-filter">
+            <input type="checkbox" id="onlyMarkedCheck"> 僅測驗已標記單字
+        </label>
+    </div>
+
+    <!-- 主要內容區 -->
+    <div id="contentArea"></div>
+
+    <!-- 批量新增／管理區 (單字書內顯示) -->
+    <div id="batchAddPanel" style="display: none;" class="batch-area">
+        <details open>
+            <summary style="font-weight:600; margin-bottom:10px;">➕ 批量新增自訂單字</summary>
+            <div style="margin-top:10px;">
+                <label>冊別：
+                    <select id="customBookSelect" class="filter-select">
+                        <option value="Book1">第一冊</option><option value="Book2">第二冊</option><option value="Book3">第三冊</option>
+                        <option value="Book4">第四冊</option><option value="Book5">第五冊</option><option value="Book6">第六冊</option>
+                    </select>
+                </label>
+                <label>單元：<input type="text" id="customUnitInput" placeholder="例: U1" value="U1" style="padding:8px; border-radius:20px; width:80px; border:1px solid #cbd5e1;"></label>
+            </div>
+            <textarea id="batchInput" rows="3" placeholder="每行格式：英文,中文,搭配(選填)&#10;federal,聯邦的,federal funding&#10;stock,股票；存貨,be in stock" style="margin-top:12px;"></textarea>
+            <button class="btn" id="batchAddBtn" style="margin-top:8px;">匯入至指定冊別/單元</button>
+            <div class="small-note" style="margin-top:6px;">自訂單字可於單字書中刪除，內建單字不可刪。</div>
+        </details>
+    </div>
+</div>
+
+<script>
+    (function(){
+        "use strict";
+
+        // ========== 內建單字庫 ==========
+        // 第一冊包含 U1~U6：
+        // U1~U5 = 最初 L01~L05 完整內容
+        // U6 = 後來提供的「單字書U1」31個詞條
+        // 若要新增/修改內建單字，請直接編輯此陣列。
+        const presetDB = [
+            // ===== 第一冊 U1 (原 L01) =====
+            { word: "memorable", chinese: "難忘的", collocation: "", book: "Book1", unit: "U1", type: "word" },
+            { word: "reply", chinese: "回答；回覆", collocation: "reply to, in reply to", book: "Book1", unit: "U1", type: "word" },
+            { word: "yell", chinese: "大喊；大吼", collocation: "yell at", book: "Book1", unit: "U1", type: "word" },
+            { word: "perfect", chinese: "完美的", collocation: "", book: "Book1", unit: "U1", type: "word" },
+            { word: "accidentally", chinese: "意外地；不小心地", collocation: "", book: "Book1", unit: "U1", type: "word" },
+            { word: "failure", chinese: "失敗", collocation: "end in failure", book: "Book1", unit: "U1", type: "word" },
+            { word: "recall", chinese: "記起；回想起", collocation: "", book: "Book1", unit: "U1", type: "word" },
+            { word: "presentation", chinese: "報告；介紹", collocation: "", book: "Book1", unit: "U1", type: "word" },
+            { word: "skip", chinese: "故意不參加；略過", collocation: "skip class", book: "Book1", unit: "U1", type: "word" },
+            { word: "ruin", chinese: "破壞；毀壞", collocation: "fall into ruin", book: "Book1", unit: "U1", type: "word" },
+            { word: "embarrassed", chinese: "尷尬的；難堪的", collocation: "", book: "Book1", unit: "U1", type: "word" },
+            { word: "depressed", chinese: "沮喪的；消沉的", collocation: "", book: "Book1", unit: "U1", type: "word" },
+            { word: "upset", chinese: "使難過；難過的", collocation: "", book: "Book1", unit: "U1", type: "word" },
+            { word: "reflect", chinese: "認真思考；沉思", collocation: "reflect on", book: "Book1", unit: "U1", type: "word" },
+            { word: "remind", chinese: "提醒；使想起", collocation: "remind sb. of sth.", book: "Book1", unit: "U1", type: "word" },
+            { word: "realize", chinese: "了解；領悟", collocation: "", book: "Book1", unit: "U1", type: "word" },
+            { word: "traditional", chinese: "傳統的", collocation: "", book: "Book1", unit: "U1", type: "word" },
+            { word: "fortunately", chinese: "幸運地", collocation: "", book: "Book1", unit: "U1", type: "word" },
+            // L01 片語
+            { word: "the rest of", chinese: "其餘的", collocation: "", book: "Book1", unit: "U1", type: "phrase" },
+            { word: "in person", chinese: "親自", collocation: "", book: "Book1", unit: "U1", type: "phrase" },
+            { word: "take seriously", chinese: "認真看待", collocation: "take...seriously", book: "Book1", unit: "U1", type: "phrase" },
+            { word: "let down", chinese: "讓……失望", collocation: "let...down", book: "Book1", unit: "U1", type: "phrase" },
+            { word: "make sure", chinese: "確保；確定", collocation: "", book: "Book1", unit: "U1", type: "phrase" },
+            { word: "put first", chinese: "認為……最重要", collocation: "put...first", book: "Book1", unit: "U1", type: "phrase" },
+            { word: "dress up", chinese: "裝扮", collocation: "", book: "Book1", unit: "U1", type: "phrase" },
+
+            // ===== 第一冊 U2 (原 L02) =====
+            { word: "relationship", chinese: "戀愛關係；關係", collocation: "in a relationship", book: "Book1", unit: "U2", type: "word" },
+            { word: "satisfying", chinese: "令人滿意的", collocation: "", book: "Book1", unit: "U2", type: "word" },
+            { word: "inspire", chinese: "激勵；激發靈感", collocation: "inspire sb. to do", book: "Book1", unit: "U2", type: "word" },
+            { word: "connect", chinese: "建立良好關係；連接", collocation: "connect with", book: "Book1", unit: "U2", type: "word" },
+            { word: "communicate", chinese: "溝通", collocation: "", book: "Book1", unit: "U2", type: "word" },
+            { word: "introduce", chinese: "使初次體驗；介紹", collocation: "introduce sb. to sth.", book: "Book1", unit: "U2", type: "word" },
+            { word: "throughout", chinese: "自始至終", collocation: "", book: "Book1", unit: "U2", type: "word" },
+            { word: "message", chinese: "訊息", collocation: "text message", book: "Book1", unit: "U2", type: "word" },
+            { word: "refresh", chinese: "刷新；使恢復精神", collocation: "refresh oneself", book: "Book1", unit: "U2", type: "word" },
+            { word: "romantic", chinese: "浪漫的", collocation: "", book: "Book1", unit: "U2", type: "word" },
+            { word: "focus", chinese: "專注；專心", collocation: "focus on", book: "Book1", unit: "U2", type: "word" },
+            { word: "ignore", chinese: "忽略", collocation: "", book: "Book1", unit: "U2", type: "word" },
+            { word: "attention", chinese: "注意力", collocation: "pay attention to", book: "Book1", unit: "U2", type: "word" },
+            { word: "deny", chinese: "否認", collocation: "deny doing", book: "Book1", unit: "U2", type: "word" },
+            { word: "respond", chinese: "回應", collocation: "respond to, in response to", book: "Book1", unit: "U2", type: "word" },
+            { word: "disappointed", chinese: "感到失望的", collocation: "", book: "Book1", unit: "U2", type: "word" },
+            { word: "personally", chinese: "針對某人地", collocation: "take sth. personally", book: "Book1", unit: "U2", type: "word" },
+            // L02 片語
+            { word: "in fact", chinese: "事實上", collocation: "", book: "Book1", unit: "U2", type: "phrase" },
+            { word: "go through", chinese: "徹底讀過", collocation: "", book: "Book1", unit: "U2", type: "phrase" },
+            { word: "in case", chinese: "以防萬一", collocation: "", book: "Book1", unit: "U2", type: "phrase" },
+            { word: "in addition", chinese: "除此之外", collocation: "", book: "Book1", unit: "U2", type: "phrase" },
+            { word: "hang out", chinese: "一起出去、廝混", collocation: "", book: "Book1", unit: "U2", type: "phrase" },
+            { word: "turn to", chinese: "轉向；求助於", collocation: "", book: "Book1", unit: "U2", type: "phrase" },
+            { word: "take personally", chinese: "認為是針對個人", collocation: "take...personally", book: "Book1", unit: "U2", type: "phrase" },
+
+            // ===== 第一冊 U3 (原 L03) =====
+            { word: "wonder", chinese: "想知道", collocation: "wonder if / wonder about", book: "Book1", unit: "U3", type: "word" },
+            { word: "amazing", chinese: "令人大感驚奇", collocation: "It's amazing how...", book: "Book1", unit: "U3", type: "word" },
+            { word: "average", chinese: "平均；平均數；一般的", collocation: "above average, on average", book: "Book1", unit: "U3", type: "word" },
+            { word: "therefore", chinese: "因此", collocation: "", book: "Book1", unit: "U3", type: "word" },
+            { word: "nap", chinese: "小睡", collocation: "take a nap", book: "Book1", unit: "U3", type: "word" },
+            { word: "float", chinese: "漂浮；漂流", collocation: "float on water", book: "Book1", unit: "U3", type: "word" },
+            { word: "avoid", chinese: "避免", collocation: "avoid doing sth.", book: "Book1", unit: "U3", type: "word" },
+            { word: "surface", chinese: "表面", collocation: "on the surface, below the surface", book: "Book1", unit: "U3", type: "word" },
+            { word: "breathe", chinese: "呼吸", collocation: "breathe in; out of breath", book: "Book1", unit: "U3", type: "word" },
+            { word: "awake", chinese: "醒著的；醒來", collocation: "stay awake, awake from sleep", book: "Book1", unit: "U3", type: "word" },
+            { word: "impressive", chinese: "令人印象深刻的", collocation: "leave an impression", book: "Book1", unit: "U3", type: "word" },
+            { word: "distance", chinese: "距離", collocation: "within walking distance", book: "Book1", unit: "U3", type: "word" },
+            { word: "journey", chinese: "旅行", collocation: "go on a journey", book: "Book1", unit: "U3", type: "word" },
+            { word: "flight", chinese: "飛行；航班", collocation: "take flight", book: "Book1", unit: "U3", type: "word" },
+            { word: "variety", chinese: "多種樣式", collocation: "a variety of", book: "Book1", unit: "U3", type: "word" },
+            { word: "creature", chinese: "生物", collocation: "", book: "Book1", unit: "U3", type: "word" },
+            { word: "expert", chinese: "專家", collocation: "an expert in/at", book: "Book1", unit: "U3", type: "word" },
+            { word: "survive", chinese: "生存；倖存", collocation: "survive from", book: "Book1", unit: "U3", type: "word" },
+            // L03 片語
+            { word: "hold on to", chinese: "緊緊抓住", collocation: "", book: "Book1", unit: "U3", type: "phrase" },
+            { word: "look out for", chinese: "當心...出現", collocation: "", book: "Book1", unit: "U3", type: "phrase" },
+            { word: "be on the lookout for", chinese: "保持警戒", collocation: "", book: "Book1", unit: "U3", type: "phrase" },
+            { word: "for example", chinese: "舉例來說", collocation: "", book: "Book1", unit: "U3", type: "phrase" },
+            { word: "according to", chinese: "根據", collocation: "", book: "Book1", unit: "U3", type: "phrase" },
+            { word: "up to", chinese: "高達", collocation: "", book: "Book1", unit: "U3", type: "phrase" },
+
+            // ===== 第一冊 U4 (原 L04) =====
+            { word: "sensitive", chinese: "敏感的", collocation: "be sensitive to", book: "Book1", unit: "U4", type: "word" },
+            { word: "keen", chinese: "敏銳的；渴望的", collocation: "keen sense of, be keen on", book: "Book1", unit: "U4", type: "word" },
+            { word: "detect", chinese: "偵測到；察覺", collocation: "", book: "Book1", unit: "U4", type: "word" },
+            { word: "item", chinese: "一項物品", collocation: "", book: "Book1", unit: "U4", type: "word" },
+            { word: "accomplish", chinese: "達成", collocation: "", book: "Book1", unit: "U4", type: "word" },
+            { word: "disease", chinese: "疾病", collocation: "heart disease", book: "Book1", unit: "U4", type: "word" },
+            { word: "infected", chinese: "遭感染的", collocation: "", book: "Book1", unit: "U4", type: "word" },
+            { word: "locate", chinese: "找到……的位置", collocation: "", book: "Book1", unit: "U4", type: "word" },
+            { word: "reward", chinese: "獎勵；報酬", collocation: "reward sb. with", book: "Book1", unit: "U4", type: "word" },
+            { word: "ability", chinese: "能力", collocation: "have the ability to", book: "Book1", unit: "U4", type: "word" },
+            { word: "predict", chinese: "預測", collocation: "", book: "Book1", unit: "U4", type: "word" },
+            { word: "manage", chinese: "設法成功做到；管理", collocation: "manage to do", book: "Book1", unit: "U4", type: "word" },
+            { word: "create", chinese: "創造；產生出", collocation: "", book: "Book1", unit: "U4", type: "word" },
+            { word: "expose", chinese: "使接觸；使體驗", collocation: "be exposed to", book: "Book1", unit: "U4", type: "word" },
+            { word: "perform", chinese: "做某事；表演", collocation: "perform a task", book: "Book1", unit: "U4", type: "word" },
+            { word: "behavior", chinese: "行為", collocation: "", book: "Book1", unit: "U4", type: "word" },
+            { word: "alert", chinese: "警示；警覺的", collocation: "stay alert", book: "Book1", unit: "U4", type: "word" },
+            { word: "complete", chinese: "已完成的；完整的", collocation: "", book: "Book1", unit: "U4", type: "word" },
+            { word: "assign", chinese: "指派", collocation: "assign sb. to do", book: "Book1", unit: "U4", type: "word" },
+            { word: "specific", chinese: "特定的", collocation: "", book: "Book1", unit: "U4", type: "word" },
+            // L04 片語
+            { word: "due to", chinese: "因為", collocation: "", book: "Book1", unit: "U4", type: "phrase" },
+            { word: "all of a sudden", chinese: "突然間", collocation: "", book: "Book1", unit: "U4", type: "phrase" },
+            { word: "turn out", chinese: "結果是", collocation: "", book: "Book1", unit: "U4", type: "phrase" },
+            { word: "come across", chinese: "遇到；偶然碰見", collocation: "", book: "Book1", unit: "U4", type: "phrase" },
+            { word: "carry out", chinese: "執行；進行", collocation: "", book: "Book1", unit: "U4", type: "phrase" },
+
+            // ===== 第一冊 U5 (原 L05) =====
+            { word: "plastic", chinese: "塑膠(製)的；塑膠", collocation: "plastic bottles, made of plastic", book: "Book1", unit: "U5", type: "word" },
+            { word: "convenience", chinese: "便利", collocation: "for the convenience of", book: "Book1", unit: "U5", type: "word" },
+            { word: "eagerly", chinese: "渴望地", collocation: "be eager for", book: "Book1", unit: "U5", type: "word" },
+            { word: "surround", chinese: "圍繞", collocation: "be surrounded by", book: "Book1", unit: "U5", type: "word" },
+            { word: "drift", chinese: "漂流", collocation: "drift toward", book: "Book1", unit: "U5", type: "word" },
+            { word: "envy", chinese: "羨慕", collocation: "envy sb., with envy", book: "Book1", unit: "U5", type: "word" },
+            { word: "crowded", chinese: "擠滿的；擁擠的", collocation: "be crowded with", book: "Book1", unit: "U5", type: "word" },
+            { word: "obviously", chinese: "顯然", collocation: "", book: "Book1", unit: "U5", type: "word" },
+            { word: "product", chinese: "產品", collocation: "", book: "Book1", unit: "U5", type: "word" },
+            { word: "consume", chinese: "吃喝；消耗", collocation: "consume time", book: "Book1", unit: "U5", type: "word" },
+            { word: "poisonous", chinese: "有毒的", collocation: "poisonous to", book: "Book1", unit: "U5", type: "word" },
+            { word: "substance", chinese: "物質", collocation: "", book: "Book1", unit: "U5", type: "word" },
+            { word: "recycling", chinese: "回收", collocation: "", book: "Book1", unit: "U5", type: "word" },
+            { word: "harm", chinese: "傷害", collocation: "do harm to, harmful to", book: "Book1", unit: "U5", type: "word" },
+            { word: "environment", chinese: "自然環境；環境", collocation: "natural environment", book: "Book1", unit: "U5", type: "word" },
+            { word: "properly", chinese: "適當地", collocation: "", book: "Book1", unit: "U5", type: "word" },
+            // L05 片語
+            { word: "come along", chinese: "到達；出現", collocation: "", book: "Book1", unit: "U5", type: "phrase" },
+            { word: "pack up", chinese: "收拾；打包", collocation: "pack...up", book: "Book1", unit: "U5", type: "phrase" },
+            { word: "on one's own", chinese: "獨自；靠自己", collocation: "", book: "Book1", unit: "U5", type: "phrase" },
+            { word: "for a while", chinese: "一陣子", collocation: "", book: "Book1", unit: "U5", type: "phrase" },
+            { word: "end up", chinese: "最後結果是", collocation: "", book: "Book1", unit: "U5", type: "phrase" },
+
+            // ===== 第一冊 U6 (您提供的「單字書U1」31個詞條) =====
+            { word: "federal", chinese: "聯邦的", collocation: "federal funding; the federal government of the United States", book: "Book1", unit: "U6", type: "word" },
+            { word: "stock", chinese: "股票；存貨", collocation: "stock market; in stock; out of stock; stock up on", book: "Book1", unit: "U6", type: "word" },
+            { word: "series", chinese: "系列", collocation: "a series of; TV series", book: "Book1", unit: "U6", type: "word" },
+            { word: "saint", chinese: "聖人", collocation: "be sainted for", book: "Book1", unit: "U6", type: "word" },
+            { word: "corporate", chinese: "企業的；合作的", collocation: "corporation; cooperation; enterprise", book: "Book1", unit: "U6", type: "word" },
+            { word: "commission", chinese: "佣金；委任", collocation: "get a commission on; on commission", book: "Book1", unit: "U6", type: "word" },
+            { word: "conduct", chinese: "處理；指揮；行為", collocation: "conduct an investigation; conduct an experiment", book: "Book1", unit: "U6", type: "word" },
+            { word: "recommend", chinese: "建議", collocation: "recommend sb to V; recommend that S + VR", book: "Book1", unit: "U6", type: "word" },
+            { word: "grant", chinese: "授予；給予；補助金", collocation: "grant sb sth; take it for granted that", book: "Book1", unit: "U6", type: "word" },
+            { word: "interpretation", chinese: "詮釋；口譯", collocation: "simultaneous interpretation; interpret A as B", book: "Book1", unit: "U6", type: "word" },
+            { word: "communist", chinese: "共產的；共產主義者", collocation: "communism; capitalism", book: "Book1", unit: "U6", type: "word" },
+            { word: "mount", chinese: "爬上；騎在", collocation: "mount a ladder; mount a horse", book: "Book1", unit: "U6", type: "word" },
+            { word: "saddle", chinese: "馬鞍；車座", collocation: "spur; harness; rein", book: "Book1", unit: "U6", type: "word" },
+            { word: "confront", chinese: "使面對", collocation: "be confronted with; confrontation", book: "Book1", unit: "U6", type: "word" },
+            { word: "personnel", chinese: "人事部；人員", collocation: "personnel department; human resources", book: "Book1", unit: "U6", type: "word" },
+            { word: "distinction", chinese: "卓越；區別", collocation: "graduate with distinction; distinctive", book: "Book1", unit: "U6", type: "word" },
+            { word: "entitle", chinese: "給予權力；命名", collocation: "entitle sb to V; be entitled to", book: "Book1", unit: "U6", type: "word" },
+            { word: "rifle", chinese: "來福槍；快速翻找", collocation: "rifle through", book: "Book1", unit: "U6", type: "word" },
+            { word: "meantime", chinese: "期間", collocation: "in the meantime", book: "Book1", unit: "U6", type: "word" },
+            { word: "adore", chinese: "喜愛；崇拜", collocation: "adoration; adorable", book: "Book1", unit: "U6", type: "word" },
+            { word: "abortion", chinese: "墮胎", collocation: "have an abortion", book: "Book1", unit: "U6", type: "word" },
+            { word: "barefoot", chinese: "光腳的", collocation: "walk barefoot", book: "Book1", unit: "U6", type: "word" },
+            { word: "fluency", chinese: "流利", collocation: "fluent; fluently", book: "Book1", unit: "U6", type: "word" },
+            { word: "foul", chinese: "骯髒的；犯規", collocation: "foul mood; commit a foul", book: "Book1", unit: "U6", type: "word" },
+            { word: "abnormal", chinese: "不正常的", collocation: "unusual; normal", book: "Book1", unit: "U6", type: "word" },
+            { word: "abolish", chinese: "廢除", collocation: "do away with", book: "Book1", unit: "U6", type: "word" },
+            { word: "commentary", chinese: "評論；解說", collocation: "play-by-play commentary", book: "Book1", unit: "U6", type: "word" },
+            { word: "diplomatic", chinese: "外交的；圓滑的", collocation: "diplomatic relations", book: "Book1", unit: "U6", type: "word" },
+            { word: "innovation", chinese: "創新", collocation: "innovative", book: "Book1", unit: "U6", type: "word" },
+            { word: "perceive", chinese: "察覺；認為", collocation: "perceive A as B", book: "Book1", unit: "U6", type: "word" },
+            { word: "proclaim", chinese: "宣稱；宣布", collocation: "proclaim that", book: "Book1", unit: "U6", type: "word" },
+            { word: "diaper", chinese: "尿布", collocation: "", book: "Book1", unit: "U6", type: "word" },
+        ];
+
+        // ========== 全域狀態 ==========
+        let customWords = [];
+        const STORAGE_CUSTOM = 'vocab_book_unit_custom_v4';
+        const STORAGE_MARKS = 'vocab_book_unit_marks_v4';
+        let markedWords = new Set();
+
+        let currentMode = 'read';
+        let currentBook = 'Book1';
+        let selectedUnits = new Set(['U1']); // 預設勾選第一個單元
+
+        let currentList = [];
+        let currentIdx = 0;
+        let quizCorrect = 0, quizAttempts = 0;
+
+        // DOM
+        const contentArea = document.getElementById('contentArea');
+        const bookSelect = document.getElementById('bookSelect');
+        const modeBtns = document.querySelectorAll('.mode-btn');
+        const quizFilterRow = document.getElementById('quizFilterRow');
+        const onlyMarkedCheck = document.getElementById('onlyMarkedCheck');
+        const unitCheckboxesDiv = document.getElementById('unitCheckboxes');
+        const unitSummary = document.getElementById('unitSummary');
+        const batchPanel = document.getElementById('batchAddPanel');
+
+        // ---------- 資料載入 ----------
+        function loadData() {
+            const c = localStorage.getItem(STORAGE_CUSTOM);
+            if (c) { try { customWords = JSON.parse(c); } catch(e){ customWords = []; } }
+            const m = localStorage.getItem(STORAGE_MARKS);
+            if (m) { try { markedWords = new Set(JSON.parse(m)); } catch(e){ markedWords = new Set(); } }
+        }
+        function saveCustom() { localStorage.setItem(STORAGE_CUSTOM, JSON.stringify(customWords)); }
+        function saveMarks() { localStorage.setItem(STORAGE_MARKS, JSON.stringify([...markedWords])); }
+
+        function getAllWords() { return [...presetDB, ...customWords]; }
+
+        // 取得當前冊別可用單元
+        function getAvailableUnits(book) {
+            const words = getAllWords().filter(w => w.book === book);
+            return [...new Set(words.map(w => w.unit).filter(u => u))].sort();
+        }
+
+        // 根據篩選條件取得單字 (閱讀/測驗用)
+        function getFilteredWords() {
+            let words = getAllWords().filter(w => w.book === currentBook && selectedUnits.has(w.unit));
+            if (currentMode === 'quiz' && onlyMarkedCheck.checked) {
+                words = words.filter(w => markedWords.has(w.word));
+            }
+            return words;
+        }
+
+        // 渲染單元勾選區
+        function renderUnitCheckboxes() {
+            const units = getAvailableUnits(currentBook);
+            let html = '';
+            units.forEach(u => {
+                const checked = selectedUnits.has(u) ? 'checked' : '';
+                html += `<label class="unit-checkbox"><input type="checkbox" value="${u}" ${checked}> ${u}</label>`;
+            });
+            unitCheckboxesDiv.innerHTML = html || '<span style="color:#888;">尚無單元</span>';
+            document.querySelectorAll('#unitCheckboxes input').forEach(cb => {
+                cb.addEventListener('change', e => {
+                    if (e.target.checked) selectedUnits.add(e.target.value);
+                    else selectedUnits.delete(e.target.value);
+                    updateUnitSummary();
+                    renderContent();
+                });
+            });
+            updateUnitSummary();
+        }
+
+        function updateUnitSummary() {
+            const cnt = getFilteredWords().length;
+            unitSummary.innerText = `已選 ${selectedUnits.size} 個單元，共 ${cnt} 個單字`;
+        }
+
+        function toggleMark(word) {
+            if (markedWords.has(word)) markedWords.delete(word);
+            else markedWords.add(word);
+            saveMarks();
+        }
+
+        // 渲染主內容
+        function renderContent() {
+            if (currentMode === 'read') renderReadMode();
+            else if (currentMode === 'quiz') renderQuizMode();
+            else if (currentMode === 'book') renderBookMode();
+            batchPanel.style.display = currentMode === 'book' ? 'block' : 'none';
+        }
+
+        // ----- 閱讀模式 -----
+        function renderReadMode() {
+            const words = getFilteredWords();
+            currentList = words.length ? words : [{ word: '尚無單字', chinese: '請勾選單元', collocation: '', unit: '' }];
+            currentIdx = 0;
+            const item = currentList[0];
+            const isMarked = markedWords.has(item.word);
+            let html = `
+                <div class="card">
+                    <div class="word-header">
+                        <span class="english-word">${item.word}</span>
+                        <button class="mark-btn ${isMarked ? 'marked' : ''}" id="toggleMarkBtn">★</button>
+                    </div>
+                    <div class="chinese-block">${item.chinese}</div>
+                    <div class="collocation">${item.collocation || ' '}</div>
+                    <div class="progress-indicator">
+                        <span>${currentIdx+1} / ${currentList.length}</span>
+                        <span>${item.unit || ''}</span>
+                    </div>
+                    <div class="action-row">
+                        <button class="btn" id="speakBtn">朗讀</button>
+                        <button class="btn" id="prevBtn">上一個</button>
+                        <button class="btn" id="nextBtn">下一個</button>
+                    </div>
+                    <div class="action-row">
+                        <button class="btn" id="speakAllBtn">連續朗讀全部</button>
+                    </div>
+                </div>
+            `;
+            contentArea.innerHTML = html;
+            if (words.length) {
+                document.getElementById('speakBtn').addEventListener('click', () => speakWord(currentList[currentIdx].word));
+                document.getElementById('prevBtn').addEventListener('click', () => navigateRead(-1));
+                document.getElementById('nextBtn').addEventListener('click', () => navigateRead(1));
+                document.getElementById('speakAllBtn').addEventListener('click', speakAll);
+                document.getElementById('toggleMarkBtn').addEventListener('click', () => {
+                    toggleMark(currentList[currentIdx].word);
+                    renderReadMode();
+                });
+            }
+        }
+
+        function navigateRead(delta) {
+            if (!currentList.length) return;
+            currentIdx = (currentIdx + delta + currentList.length) % currentList.length;
+            renderReadMode();
+        }
+
+        function speakWord(word) {
+            if (!word || word === '尚無單字') return;
+            const u = new SpeechSynthesisUtterance(word);
+            u.lang = 'en-US';
+            speechSynthesis.speak(u);
+        }
+
+        function speakAll() {
+            if (!currentList.length) return;
+            let i = 0;
+            function next() {
+                if (i >= currentList.length) return;
+                const w = currentList[i].word;
+                if (w && w !== '尚無單字') {
+                    const u = new SpeechSynthesisUtterance(w);
+                    u.lang = 'en-US';
+                    u.onend = () => { i++; next(); };
+                    speechSynthesis.speak(u);
+                } else { i++; next(); }
+            }
+            speechSynthesis.cancel();
+            next();
+        }
+
+        // ----- 測驗模式 (不顯示搭配詞) -----
+        function renderQuizMode() {
+            const words = getFilteredWords();
+            currentList = words.length ? words : [{ word: '無單字', chinese: '沒有可測單字', collocation: '' }];
+            currentIdx = 0;
+            quizCorrect = 0; quizAttempts = 0;
+            const item = currentList[0];
+            let html = `
+                <div class="card">
+                    <div class="chinese-block" style="font-size:2rem;">${item.chinese}</div>
+                    <div class="progress-indicator">
+                        <span>${currentIdx+1} / ${currentList.length}</span>
+                        <span id="quizScore">正確 ${quizCorrect} / ${quizAttempts}</span>
+                    </div>
+                    <input type="text" class="spell-input" id="quizInput" placeholder="輸入英文" autocomplete="off">
+                    <div class="action-row">
+                        <button class="btn" id="quizCheckBtn">檢查</button>
+                        <button class="btn" id="quizNextBtn">下一題</button>
+                    </div>
+                    <div class="feedback" id="quizFeedback"></div>
+                </div>
+            `;
+            contentArea.innerHTML = html;
+            if (words.length) {
+                document.getElementById('quizCheckBtn').addEventListener('click', checkQuiz);
+                document.getElementById('quizNextBtn').addEventListener('click', nextQuiz);
+                document.getElementById('quizInput').addEventListener('keypress', e => { if(e.key==='Enter') checkQuiz(); });
+            }
+        }
+
+        function checkQuiz() {
+            const item = currentList[currentIdx];
+            if (!item || item.word === '無單字') return;
+            const ans = document.getElementById('quizInput').value.trim();
+            quizAttempts++;
+            if (ans.toLowerCase() === item.word.toLowerCase()) {
+                quizCorrect++;
+                document.getElementById('quizFeedback').innerHTML = `<span class="correct">正確！</span>`;
+                document.getElementById('quizScore').innerText = `正確 ${quizCorrect} / ${quizAttempts}`;
+                setTimeout(() => nextQuiz(), 400);
+            } else {
+                document.getElementById('quizFeedback').innerHTML = `<span class="wrong">錯誤，正確：${item.word}</span>`;
+                document.getElementById('quizScore').innerText = `正確 ${quizCorrect} / ${quizAttempts}`;
+            }
+        }
+
+        function nextQuiz() {
+            if (!currentList.length) return;
+            currentIdx = (currentIdx + 1) % currentList.length;
+            const item = currentList[currentIdx];
+            document.querySelector('.chinese-block').innerText = item.chinese;
+            document.querySelector('.progress-indicator span:first-child').innerText = `${currentIdx+1} / ${currentList.length}`;
+            document.getElementById('quizInput').value = '';
+            document.getElementById('quizFeedback').innerHTML = '';
+        }
+
+        // ----- 單字書模式 (列表瀏覽) -----
+        function renderBookMode() {
+            let words = getAllWords().filter(w => w.book === currentBook);
+            let html = `<div style="margin-bottom:12px;"><strong>${currentBook} 全部單字 (${words.length})</strong></div>`;
+            html += `<div class="word-list">`;
+            if (!words.length) html += `<div class="empty-msg">尚無單字</div>`;
+            else {
+                words.forEach(item => {
+                    const isMarked = markedWords.has(item.word);
+                    const isCustom = customWords.some(c => c.word === item.word && c.book === item.book && c.unit === item.unit);
+                    html += `
+                        <div class="list-item">
+                            <div class="info"><span class="word">${item.word}</span> — ${item.chinese} ${item.collocation ? '· '+item.collocation : ''} <span style="color:#888;">(${item.unit})</span></div>
+                            <button class="small-btn mark-toggle" data-word="${item.word}">${isMarked ? '★取消' : '☆標記'}</button>
+                            <button class="small-btn speak-item" data-word="${item.word}">朗讀</button>
+                            ${isCustom ? `<button class="small-btn delete-custom" data-word="${item.word}" data-unit="${item.unit}">刪除</button>` : ''}
+                        </div>
+                    `;
+                });
+            }
+            html += `</div>`;
+            contentArea.innerHTML = html;
+            document.querySelectorAll('.speak-item').forEach(b => b.addEventListener('click', e => speakWord(e.target.dataset.word)));
+            document.querySelectorAll('.mark-toggle').forEach(b => b.addEventListener('click', e => {
+                toggleMark(e.target.dataset.word);
+                renderBookMode();
+            }));
+            document.querySelectorAll('.delete-custom').forEach(b => b.addEventListener('click', e => {
+                const w = e.target.dataset.word;
+                const u = e.target.dataset.unit;
+                customWords = customWords.filter(c => !(c.word === w && c.book === currentBook && c.unit === u));
+                saveCustom();
+                renderBookMode();
+                renderUnitCheckboxes();
+            }));
+        }
+
+        // 批量新增
+        function batchAddWords() {
+            const book = document.getElementById('customBookSelect').value;
+            const unit = document.getElementById('customUnitInput').value.trim();
+            if (!unit) { alert('請輸入單元'); return; }
+            const text = document.getElementById('batchInput').value.trim();
+            text.split('\n').forEach(line => {
+                const p = line.split(',').map(s => s.trim());
+                if (p.length >= 2) {
+                    const word = p[0], chinese = p[1], collocation = p[2] || '';
+                    if (word && chinese) {
+                        customWords.push({ word, chinese, collocation, book, unit, type: 'word' });
+                    }
+                }
+            });
+            saveCustom();
+            document.getElementById('batchInput').value = '';
+            if (currentMode === 'book') renderBookMode();
+            renderUnitCheckboxes();
+            if (currentBook === book && !selectedUnits.has(unit)) {
+                selectedUnits.add(unit);
+                renderUnitCheckboxes();
+                renderContent();
+            }
+        }
+
+        // 初始化
+        function init() {
+            loadData();
+            renderUnitCheckboxes();
+            renderContent();
+
+            bookSelect.addEventListener('change', e => {
+                currentBook = e.target.value;
+                const units = getAvailableUnits(currentBook);
+                selectedUnits.clear();
+                if (units.length) selectedUnits.add(units[0]);
+                renderUnitCheckboxes();
+                renderContent();
+            });
+
+            modeBtns.forEach(btn => btn.addEventListener('click', () => {
+                modeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                quizFilterRow.style.display = currentMode === 'quiz' ? 'flex' : 'none';
+                renderContent();
+            }));
+
+            onlyMarkedCheck.addEventListener('change', () => {
+                if (currentMode === 'quiz') renderQuizMode();
+            });
+
+            document.getElementById('batchAddBtn').addEventListener('click', batchAddWords);
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>
