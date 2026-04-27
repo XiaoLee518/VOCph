@@ -1,285 +1,310 @@
-import { useState, useEffect, useRef, useCallback } from “react”;
+<!DOCTYPE html>
 
-function speak(text, rate = 0.82) {
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>單字練習</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d0d12; color: #e0dcd4; font-family: Georgia, serif; }
+input:focus { outline: none; border-color: #c8a96e !important; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #0d0d12; }
+::-webkit-scrollbar-thumb { background: #2a2a38; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+function speak(text, rate=0.82) {
 if (!window.speechSynthesis) return;
 window.speechSynthesis.cancel();
 const u = new SpeechSynthesisUtterance(text);
-u.lang = “en-US”; u.rate = rate;
+u.lang=“en-US”; u.rate=rate;
 window.speechSynthesis.speak(u);
 }
 
 function blankDisplay(word) {
 if (!word) return “_**”;
 return word.split(” “).map(w => {
-if (w.length <= 1) return w;
-if (w.length === 2) return w[0] + “*”;
-return w[0] + “*”.repeat(w.length - 2) + w[w.length - 1];
+if (w.length<=1) return w;
+if (w.length===2) return w[0]+”*”;
+return w[0]+”*”.repeat(w.length-2)+w[w.length-1];
 }).join(” “);
 }
 
 const FILL_A = [
-{ q: “Regular ______ of the machines is necessary to keep the factory running smoothly.”, a: [“maintenance”] },
-{ q: “The company made a ______ profit this year, far exceeding everyone’s expectations.”, a: [“substantial”] },
-{ q: “Young graduates often face uncertain ______ in today’s competitive job market.”, a: [“prospects”] },
-{ q: “The lawyer struggled to ______ his client’s actions in front of the judge.”, a: [“justify”] },
-{ q: “The gallery showcases ______ works of art created by artists who are still active today.”, a: [“contemporary”] },
-{ q: “Several neighboring countries formed a ______ to protect their shared economic interests.”, a: [“league”] },
-{ q: “She had only a vague ______ of what the new project would involve.”, a: [“notion”] },
-{ q: “The tailor agreed to ______ the dress so that it would fit perfectly.”, a: [“alter”] },
-{ q: “The ______ Court is the highest judicial authority in the nation.”, a: [“supreme”,“Supreme”] },
-{ q: “The manager was told to ______ the new policy without delay.”, a: [“execute”] },
-{ q: “All students must ______ their assignments to the teacher by Friday.”, a: [“submit”] },
-{ q: “The millionaire left his entire ______ to his three children after his death.”, a: [“estate”] },
-{ q: “The ______ of the café was decorated with warm wooden furniture and soft lighting.”, a: [“interior”] },
-{ q: “The investigation revealed that the suspect had been ______ to steal company secrets for months.”, a: [“scheming”] },
-{ q: “She went to the mall to ______ a birthday gift for her best friend.”, a: [“purchase”] },
-{ q: “The professor ______ several important studies to support his controversial theory.”, a: [“cited”] },
-{ q: “Only a small ______ of the students managed to pass the final examination.”, a: [“proportion”] },
-{ q: “After a long negotiation, both sides agreed to ______ on some of their demands.”, a: [“yield”] },
-{ q: “The roads were flooded; ______, many commuters chose to stay home that day.”, a: [“hence”] },
-{ q: “Traditional customs still ______ in many remote villages where modernization has not yet arrived.”, a: [“prevail”] },
-{ q: “The ______ quality of the students’ work has improved significantly this semester.”, a: [“overall”] },
-{ q: “Standing at the edge of the cliff filled her with a deep sense of ______.”, a: [“awe”] },
-{ q: “After years of drought, the once-fertile land had become completely ______.”, a: [“barren”] },
-{ q: “A street ______ sold fresh fruit and vegetables outside the train station every morning.”, a: [“vendor”] },
-{ q: “In the worst possible ______, the entire project would have to be cancelled.”, a: [“scenario”] },
-{ q: “The new security system is highly ______ and can detect any unusual activity within seconds.”, a: [“sophisticated”] },
-{ q: “The coach ______ the team’s championship victory to months of hard training and discipline.”, a: [“attributed”] },
-{ q: “The goods were damaged while in ______ and never reached the customer.”, a: [“transit”] },
-{ q: “The scale of the earthquake was ______; no one had ever seen anything like it before.”, a: [“unprecedented”] },
-{ q: “She showed no interest ______ in joining the new student club.”, a: [“whatsoever”] },
-{ q: “The building’s ______ team inspects all the equipment every three months without fail.”, a: [“maintenance”] },
-{ q: “The new policy will bring ______ changes to how the company manages its finances.”, a: [“substantial”] },
-{ q: “She has bright ______ ahead of her in the field of medicine.”, a: [“prospects”] },
-{ q: “It is difficult to ______ spending such a large sum of money on a single project.”, a: [“justify”] },
-{ q: “The museum is famous for its collection of ______ art by artists who are still working today.”, a: [“contemporary”] },
-{ q: “Two powerful nations formed a military ______ to defend their shared borders.”, a: [“league”] },
-{ q: “I had no ______ that the meeting would last more than three hours.”, a: [“notion”] },
-{ q: “The architect decided to ______ the design after receiving feedback from the clients.”, a: [“alter”] },
-{ q: “The ______ ruler made all final decisions and answered to no one above him.”, a: [“supreme”] },
-{ q: “The general ordered his troops to ______ the plan before dawn the following morning.”, a: [“execute”] },
-{ q: “The application must be ______ before the end of the month to be considered valid.”, a: [“submitted”] },
-{ q: “He inherited a large ______ in the countryside, including several houses and farmland.”, a: [“estate”] },
-{ q: “The ______ of the ancient temple was covered with beautiful carvings and golden decorations.”, a: [“interior”] },
-{ q: “The politician was accused of ______ against his own party to gain personal power.”, a: [“scheming”] },
-{ q: “He decided to ______ a new computer after his old one stopped working.”, a: [“purchase”] },
-{ q: “The speaker ______ a famous philosopher to add weight to his argument.”, a: [“cited”] },
-{ q: “The ______ of boys to girls in the science class is approximately two to one.”, a: [“proportion”] },
-{ q: “The old tree finally ______ to the force of the powerful wind and fell to the ground.”, a: [“yielded”] },
+{q:“Regular ______ of the machines is necessary to keep the factory running smoothly.”,a:[“maintenance”]},
+{q:“The company made a ______ profit this year, far exceeding everyone’s expectations.”,a:[“substantial”]},
+{q:“Young graduates often face uncertain ______ in today’s competitive job market.”,a:[“prospects”]},
+{q:“The lawyer struggled to ______ his client’s actions in front of the judge.”,a:[“justify”]},
+{q:“The gallery showcases ______ works of art created by artists who are still active today.”,a:[“contemporary”]},
+{q:“Several neighboring countries formed a ______ to protect their shared economic interests.”,a:[“league”]},
+{q:“She had only a vague ______ of what the new project would involve.”,a:[“notion”]},
+{q:“The tailor agreed to ______ the dress so that it would fit perfectly.”,a:[“alter”]},
+{q:“The ______ Court is the highest judicial authority in the nation.”,a:[“supreme”,“Supreme”]},
+{q:“The manager was told to ______ the new policy without delay.”,a:[“execute”]},
+{q:“All students must ______ their assignments to the teacher by Friday.”,a:[“submit”]},
+{q:“The millionaire left his entire ______ to his three children after his death.”,a:[“estate”]},
+{q:“The ______ of the café was decorated with warm wooden furniture and soft lighting.”,a:[“interior”]},
+{q:“The investigation revealed that the suspect had been ______ to steal company secrets for months.”,a:[“scheming”]},
+{q:“She went to the mall to ______ a birthday gift for her best friend.”,a:[“purchase”]},
+{q:“The professor ______ several important studies to support his controversial theory.”,a:[“cited”]},
+{q:“Only a small ______ of the students managed to pass the final examination.”,a:[“proportion”]},
+{q:“After a long negotiation, both sides agreed to ______ on some of their demands.”,a:[“yield”]},
+{q:“The roads were flooded; ______, many commuters chose to stay home that day.”,a:[“hence”]},
+{q:“Traditional customs still ______ in many remote villages where modernization has not yet arrived.”,a:[“prevail”]},
+{q:“The ______ quality of the students’ work has improved significantly this semester.”,a:[“overall”]},
+{q:“Standing at the edge of the cliff filled her with a deep sense of ______.”,a:[“awe”]},
+{q:“After years of drought, the once-fertile land had become completely ______.”,a:[“barren”]},
+{q:“A street ______ sold fresh fruit and vegetables outside the train station every morning.”,a:[“vendor”]},
+{q:“In the worst possible ______, the entire project would have to be cancelled.”,a:[“scenario”]},
+{q:“The new security system is highly ______ and can detect any unusual activity within seconds.”,a:[“sophisticated”]},
+{q:“The coach ______ the team’s championship victory to months of hard training and discipline.”,a:[“attributed”]},
+{q:“The goods were damaged while in ______ and never reached the customer.”,a:[“transit”]},
+{q:“The scale of the earthquake was ______; no one had ever seen anything like it before.”,a:[“unprecedented”]},
+{q:“She showed no interest ______ in joining the new student club.”,a:[“whatsoever”]},
+{q:“The building’s ______ team inspects all the equipment every three months without fail.”,a:[“maintenance”]},
+{q:“The new policy will bring ______ changes to how the company manages its finances.”,a:[“substantial”]},
+{q:“She has bright ______ ahead of her in the field of medicine.”,a:[“prospects”]},
+{q:“It is difficult to ______ spending such a large sum of money on a single project.”,a:[“justify”]},
+{q:“The museum is famous for its collection of ______ art by artists who are still working today.”,a:[“contemporary”]},
+{q:“Two powerful nations formed a military ______ to defend their shared borders.”,a:[“league”]},
+{q:“I had no ______ that the meeting would last more than three hours.”,a:[“notion”]},
+{q:“The architect decided to ______ the design after receiving feedback from the clients.”,a:[“alter”]},
+{q:“The ______ ruler made all final decisions and answered to no one above him.”,a:[“supreme”]},
+{q:“The general ordered his troops to ______ the plan before dawn the following morning.”,a:[“execute”]},
+{q:“The application must be ______ before the end of the month to be considered valid.”,a:[“submitted”]},
+{q:“He inherited a large ______ in the countryside, including several houses and farmland.”,a:[“estate”]},
+{q:“The ______ of the ancient temple was covered with beautiful carvings and golden decorations.”,a:[“interior”]},
+{q:“The politician was accused of ______ against his own party to gain personal power.”,a:[“scheming”]},
+{q:“He decided to ______ a new computer after his old one stopped working.”,a:[“purchase”]},
+{q:“The speaker ______ a famous philosopher to add weight to his argument.”,a:[“cited”]},
+{q:“The ______ of boys to girls in the science class is approximately two to one.”,a:[“proportion”]},
+{q:“The old tree finally ______ to the force of the powerful wind and fell to the ground.”,a:[“yielded”]},
 ];
 
 const FILL_B = [
-{ q: “Despite the danger, the rescue team ______ managed to reach all the survivors in time.”, a: [“somehow”] },
-{ q: “When it comes to preserving ______ ruins, governments must be willing to invest both time and money.”, a: [“ancient”] },
-{ q: “The students could ______ hear the teacher’s voice from the back of the large lecture hall.”, a: [“barely”] },
-{ q: “Her ______ to become a doctor never wavered, even when the exams seemed impossible to pass.”, a: [“determination”] },
-{ q: “The city decided to ______ the old fountain and replace it with a modern sculpture.”, a: [“remove”] },
-{ q: “Ada’s music teacher gave her the ______ she needed to keep practicing when things got difficult.”, a: [“encouragement”] },
-{ q: “The broken chains at Lady Liberty’s feet ______ freedom from slavery and unfair treatment.”, a: [“symbolize”] },
-{ q: “Ada played the ______ her grandma had signed her up to learn, and over time she became very skilled.”, a: [“instrument”] },
-{ q: “Many parents ______ their children to read by taking them to the library every weekend.”, a: [“encourage”] },
-{ q: “Standing in front of the ancient ******, visitors felt a deep connection to the past.”, a: [“monument”] },
-{ q: “She had ______ in the children’s ability to improve, and that belief kept them going.”, a: [“faith”] },
-{ q: “It was ______ that such a talented young artist had gone unnoticed for so many years.”, a: [“unfair”] },
-{ q: “The city’s most famous ______ attracts millions of tourists from around the globe every year.”, a: [“landmark”] },
-{ q: “****** the rainy weather, thousands of fans gathered outside to welcome their favorite band home.”, a: [“Even though”] },
-{ q: “The local ______ came together to clean up the park after the devastating storm.”, a: [“community”] },
-{ q: “She had a sudden ______ to quit her job and travel around the world for a year.”, a: [“impulse”] },
-{ q: “All visitors must obtain ______ before taking photographs inside the museum.”, a: [“permission”] },
-{ q: “Their performance ______d audiences around the world, earning them international fame.”, a: [“dazzle”] },
-{ q: “The company’s new product proved highly ______, earning record profits in its first month.”, a: [“profitable”] },
-{ q: “The documentary explored the ______ of war through the eyes of ordinary civilians.”, a: [“horror”] },
-{ q: “She ______ her goal of becoming an Olympic swimmer by training six hours every day.”, a: [“pursued”] },
-{ q: “The artist used bright colors to ______ the beauty of nature in her latest painting.”, a: [“express”] },
-{ q: “The teacher urged the students to ______ their ideas clearly and confidently in their essays.”, a: [“express”] },
-{ q: “The loud ______s of the crowd could be heard from blocks away as the team scored the winning goal.”, a: [“scream”] },
-{ q: “She was surprised to find that her new colleagues were very ______ with her preferred working style.”, a: [“familiar”] },
-{ q: “The ______ of the ancient painting was so great that visitors lined up for hours to see it.”, a: [“attraction”] },
-{ q: “The two designs are ______ in many ways but differ in terms of color and material.”, a: [“similar”] },
-{ q: “The players were filled with ______ as they lifted the championship trophy above their heads.”, a: [“triumph”] },
-{ q: “In ______ with traditional methods, the new technique is faster and less expensive.”, a: [“contrast”] },
-{ q: “The ______ artist was arrested for damaging public property with spray paint.”, a: [“criminal”] },
-{ q: “She barely had enough ______ left to finish the last few pages of her lengthy report.”, a: [“effort”] },
-{ q: “The ______ of the damage caused by the storm was visible across the entire neighborhood.”, a: [“destruction”] },
-{ q: “The local government worked hard to raise ______ about the dangers of air pollution.”, a: [“awareness”] },
-{ q: “All students must ______ for the scholarship before the end of the school term.”, a: [“apply”] },
-{ q: “Some researchers believe that ______ in video games can lead to more aggressive behavior in real life.”, a: [“violence”] },
-{ q: “The country achieved ______ from colonial rule after many long years of struggle.”, a: [“independence”] },
-{ q: “Performing ______ for several years gave her an experience that no classroom could ever replicate.”, a: [“overseas”] },
-{ q: “The audience was so moved by the music that many were ______ away by the emotion of the performance.”, a: [“carried”] },
-{ q: “New buildings in the city are often designed to ______ tourists and boost the local economy.”, a: [“attract”] },
-{ q: “She felt ______ after spinning around on the dance floor for so long.”, a: [“dizzy”] },
-{ q: “The coach said the team would need to put in far more ______ if they hoped to qualify for the finals.”, a: [“effort”] },
-{ q: “The ______ power of the typhoon left behind a trail of destruction across the entire coastline.”, a: [“destructive”] },
-{ q: “The store placed its most popular products at eye level so they would be easily ______ to shoppers.”, a: [“visible”] },
-{ q: “She filled out a long ______ form before she was finally accepted into the music training program.”, a: [“application”] },
-{ q: “The ancient temple is recognized as one of the most famous ______s in the entire country.”, a: [“landmark”] },
-{ q: “The tour guide provided a ______ explanation of the history behind each painting in the gallery.”, a: [“detailed”] },
-{ q: “The children could ______ wait for the performance to begin; they were absolutely thrilled with excitement.”, a: [“barely”] },
-{ q: “After much hard work and personal sacrifice, she ______ achieved her dream of becoming a concert pianist.”, a: [“eventually”] },
-{ q: “Raising ______ about environmental issues is the first and most important step toward making a real change.”, a: [“awareness”] },
-{ q: “The workers put a great deal of ______ into carefully restoring the ancient painting to its original state.”, a: [“effort”] },
+{q:“Despite the danger, the rescue team ______ managed to reach all the survivors in time.”,a:[“somehow”]},
+{q:“When it comes to preserving ______ ruins, governments must be willing to invest both time and money.”,a:[“ancient”]},
+{q:“The students could ______ hear the teacher’s voice from the back of the large lecture hall.”,a:[“barely”]},
+{q:“Her ______ to become a doctor never wavered, even when the exams seemed impossible to pass.”,a:[“determination”]},
+{q:“The city decided to ______ the old fountain and replace it with a modern sculpture.”,a:[“remove”]},
+{q:“Ada’s music teacher gave her the ______ she needed to keep practicing when things got difficult.”,a:[“encouragement”]},
+{q:“The broken chains at Lady Liberty’s feet ______ freedom from slavery and unfair treatment.”,a:[“symbolize”]},
+{q:“Ada played the ______ her grandma had signed her up to learn, and over time she became very skilled.”,a:[“instrument”]},
+{q:“Many parents ______ their children to read by taking them to the library every weekend.”,a:[“encourage”]},
+{q:“Standing in front of the ancient ******, visitors felt a deep connection to the past.”,a:[“monument”]},
+{q:“She had ______ in the children’s ability to improve, and that belief kept them going.”,a:[“faith”]},
+{q:“It was ______ that such a talented young artist had gone unnoticed for so many years.”,a:[“unfair”]},
+{q:“The city’s most famous ______ attracts millions of tourists from around the globe every year.”,a:[“landmark”]},
+{q:”****** the rainy weather, thousands of fans gathered outside to welcome their favorite band home.”,a:[“Even though”]},
+{q:“The local ______ came together to clean up the park after the devastating storm.”,a:[“community”]},
+{q:“She had a sudden ______ to quit her job and travel around the world for a year.”,a:[“impulse”]},
+{q:“All visitors must obtain ______ before taking photographs inside the museum.”,a:[“permission”]},
+{q:“Their performance ______d audiences around the world, earning them international fame.”,a:[“dazzle”]},
+{q:“The company’s new product proved highly ______, earning record profits in its first month.”,a:[“profitable”]},
+{q:“The documentary explored the ______ of war through the eyes of ordinary civilians.”,a:[“horror”]},
+{q:“She ______ her goal of becoming an Olympic swimmer by training six hours every day.”,a:[“pursued”]},
+{q:“The artist used bright colors to ______ the beauty of nature in her latest painting.”,a:[“express”]},
+{q:“The teacher urged the students to ______ their ideas clearly and confidently in their essays.”,a:[“express”]},
+{q:“The loud ______s of the crowd could be heard from blocks away as the team scored the winning goal.”,a:[“scream”]},
+{q:“She was surprised to find that her new colleagues were very ______ with her preferred working style.”,a:[“familiar”]},
+{q:“The ______ of the ancient painting was so great that visitors lined up for hours to see it.”,a:[“attraction”]},
+{q:“The two designs are ______ in many ways but differ in terms of color and material.”,a:[“similar”]},
+{q:“The players were filled with ______ as they lifted the championship trophy above their heads.”,a:[“triumph”]},
+{q:“In ______ with traditional methods, the new technique is faster and less expensive.”,a:[“contrast”]},
+{q:“The ______ artist was arrested for damaging public property with spray paint.”,a:[“criminal”]},
+{q:“She barely had enough ______ left to finish the last few pages of her lengthy report.”,a:[“effort”]},
+{q:“The ______ of the damage caused by the storm was visible across the entire neighborhood.”,a:[“destruction”]},
+{q:“The local government worked hard to raise ______ about the dangers of air pollution.”,a:[“awareness”]},
+{q:“All students must ______ for the scholarship before the end of the school term.”,a:[“apply”]},
+{q:“Some researchers believe that ______ in video games can lead to more aggressive behavior in real life.”,a:[“violence”]},
+{q:“The country achieved ______ from colonial rule after many long years of struggle.”,a:[“independence”]},
+{q:“Performing ______ for several years gave her an experience that no classroom could ever replicate.”,a:[“overseas”]},
+{q:“The audience was so moved by the music that many were ______ away by the emotion of the performance.”,a:[“carried”]},
+{q:“New buildings in the city are often designed to ______ tourists and boost the local economy.”,a:[“attract”]},
+{q:“She felt ______ after spinning around on the dance floor for so long.”,a:[“dizzy”]},
+{q:“The coach said the team would need to put in far more ______ if they hoped to qualify for the finals.”,a:[“effort”]},
+{q:“The ______ power of the typhoon left behind a trail of destruction across the entire coastline.”,a:[“destructive”]},
+{q:“The store placed its most popular products at eye level so they would be easily ______ to shoppers.”,a:[“visible”]},
+{q:“She filled out a long ______ form before she was finally accepted into the music training program.”,a:[“application”]},
+{q:“The ancient temple is recognized as one of the most famous ______s in the entire country.”,a:[“landmark”]},
+{q:“The tour guide provided a ______ explanation of the history behind each painting in the gallery.”,a:[“detailed”]},
+{q:“The children could ______ wait for the performance to begin; they were absolutely thrilled with excitement.”,a:[“barely”]},
+{q:“After much hard work and personal sacrifice, she ______ achieved her dream of becoming a concert pianist.”,a:[“eventually”]},
+{q:“Raising ______ about environmental issues is the first and most important step toward making a real change.”,a:[“awareness”]},
+{q:“The workers put a great deal of ______ into carefully restoring the ancient painting to its original state.”,a:[“effort”]},
 ];
 
 const WORDS_A = [
-{ en:“maintenance”,pos:“n.”,zh:“保養；維護” },
-{ en:“substantial”,pos:“adj.”,zh:“大量的；相當大的” },
-{ en:“prospects”,pos:“n.”,zh:“前景；展望” },
-{ en:“justify”,pos:“vt.”,zh:“說明⋯的正當理由” },
-{ en:“contemporary”,pos:“adj.”,zh:“當代的” },
-{ en:“league”,pos:“n.”,zh:“聯盟” },
-{ en:“notion”,pos:“n.”,zh:“概念；觀念” },
-{ en:“alter”,pos:“vt.”,zh:“修改；改變” },
-{ en:“supreme”,pos:“adj.”,zh:“最高的” },
-{ en:“execute”,pos:“vt.”,zh:“執行” },
-{ en:“submit”,pos:“vt.”,zh:“提交；呈交” },
-{ en:“estate”,pos:“n.”,zh:“地產；財產” },
-{ en:“interior”,pos:“n./adj.”,zh:“內部；內裝” },
-{ en:“scheme”,pos:“vi./n.”,zh:“密謀；計畫；陰謀” },
-{ en:“partly”,pos:“adv.”,zh:“部分地” },
-{ en:“purchase”,pos:“vt./n.”,zh:“購買” },
-{ en:“cite”,pos:“vt.”,zh:“引用；引述” },
-{ en:“proportion”,pos:“n.”,zh:“比例” },
-{ en:“yield”,pos:“vi./vt.”,zh:“讓步；屈服；產出” },
-{ en:“hence”,pos:“adv.”,zh:“因此” },
-{ en:“prevail”,pos:“vi.”,zh:“盛行；佔優勢” },
-{ en:“overall”,pos:“adv./adj.”,zh:“整體而言；總體的” },
-{ en:“awe”,pos:“n.”,zh:“敬畏” },
-{ en:“barren”,pos:“adj.”,zh:“荒蕪的” },
-{ en:“vendor”,pos:“n.”,zh:“攤販；賣家” },
-{ en:“scenario”,pos:“n.”,zh:“情況；情境” },
-{ en:“sophisticated”,pos:“adj.”,zh:“精密的；複雜的” },
-{ en:“attribute”,pos:“vt.”,zh:“歸因於” },
-{ en:“transit”,pos:“n.”,zh:“運輸；過境” },
-{ en:“unprecedented”,pos:“adj.”,zh:“前所未有的” },
-{ en:“whatsoever”,pos:“adv.”,zh:”（否定句強調）絲毫；任何” },
+{en:“maintenance”,pos:“n.”,zh:“保養；維護”},
+{en:“substantial”,pos:“adj.”,zh:“大量的；相當大的”},
+{en:“prospects”,pos:“n.”,zh:“前景；展望”},
+{en:“justify”,pos:“vt.”,zh:“說明⋯的正當理由”},
+{en:“contemporary”,pos:“adj.”,zh:“當代的”},
+{en:“league”,pos:“n.”,zh:“聯盟”},
+{en:“notion”,pos:“n.”,zh:“概念；觀念”},
+{en:“alter”,pos:“vt.”,zh:“修改；改變”},
+{en:“supreme”,pos:“adj.”,zh:“最高的”},
+{en:“execute”,pos:“vt.”,zh:“執行”},
+{en:“submit”,pos:“vt.”,zh:“提交；呈交”},
+{en:“estate”,pos:“n.”,zh:“地產；財產”},
+{en:“interior”,pos:“n./adj.”,zh:“內部；內裝”},
+{en:“scheme”,pos:“vi./n.”,zh:“密謀；計畫；陰謀”},
+{en:“partly”,pos:“adv.”,zh:“部分地”},
+{en:“purchase”,pos:“vt./n.”,zh:“購買”},
+{en:“cite”,pos:“vt.”,zh:“引用；引述”},
+{en:“proportion”,pos:“n.”,zh:“比例”},
+{en:“yield”,pos:“vi./vt.”,zh:“讓步；屈服；產出”},
+{en:“hence”,pos:“adv.”,zh:“因此”},
+{en:“prevail”,pos:“vi.”,zh:“盛行；佔優勢”},
+{en:“overall”,pos:“adv./adj.”,zh:“整體而言；總體的”},
+{en:“awe”,pos:“n.”,zh:“敬畏”},
+{en:“barren”,pos:“adj.”,zh:“荒蕪的”},
+{en:“vendor”,pos:“n.”,zh:“攤販；賣家”},
+{en:“scenario”,pos:“n.”,zh:“情況；情境”},
+{en:“sophisticated”,pos:“adj.”,zh:“精密的；複雜的”},
+{en:“attribute”,pos:“vt.”,zh:“歸因於”},
+{en:“transit”,pos:“n.”,zh:“運輸；過境”},
+{en:“unprecedented”,pos:“adj.”,zh:“前所未有的”},
+{en:“whatsoever”,pos:“adv.”,zh:”（否定句強調）絲毫；任何”},
 ];
 
 const WORDS_B = [
-{ en:“freedom”,pos:“n.”,zh:“自由” },
-{ en:“statue”,pos:“n.”,zh:“雕像” },
-{ en:“remove”,pos:“vt.”,zh:“移除” },
-{ en:“celebration”,pos:“n.”,zh:“慶祝活動” },
-{ en:“celebrate”,pos:“vt.”,zh:“慶祝” },
-{ en:“independence”,pos:“n.”,zh:“獨立” },
-{ en:“independent”,pos:“adj.”,zh:“獨立的” },
-{ en:“monument”,pos:“n.”,zh:“紀念碑” },
-{ en:“symbolize”,pos:“vt.”,zh:“象徵” },
-{ en:“symbol”,pos:“n.”,zh:“象徵” },
-{ en:“symbolic”,pos:“adj.”,zh:“象徵性的” },
-{ en:“firmly”,pos:“adv.”,zh:“牢固地；堅定地” },
-{ en:“represent”,pos:“vt.”,zh:“代表” },
-{ en:“ancient”,pos:“adj.”,zh:“古代的” },
-{ en:“slavery”,pos:“n.”,zh:“蓄奴制” },
-{ en:“slave”,pos:“n.”,zh:“奴隸” },
-{ en:“unfair”,pos:“adj.”,zh:“不公平的” },
-{ en:“treatment”,pos:“n.”,zh:“對待；待遇” },
-{ en:“tourist”,pos:“n.”,zh:“遊客” },
-{ en:“tourism”,pos:“n.”,zh:“旅遊業” },
-{ en:“attraction”,pos:“n.”,zh:“有吸引力的地點” },
-{ en:“attract”,pos:“vt.”,zh:“吸引” },
-{ en:“attractive”,pos:“adj.”,zh:“吸引人的” },
-{ en:“landmark”,pos:“n.”,zh:“地標” },
-{ en:“globe”,pos:“n.”,zh:“地球；世界” },
-{ en:“global”,pos:“adj.”,zh:“全球的” },
-{ en:“triumph”,pos:“n.”,zh:“勝利；喜悅” },
-{ en:“apply”,pos:“vi.”,zh:“申請” },
-{ en:“application”,pos:“n.”,zh:“申請書” },
-{ en:“applicant”,pos:“n.”,zh:“申請人” },
-{ en:“instrument”,pos:“n.”,zh:“樂器；儀器” },
-{ en:“somehow”,pos:“adv.”,zh:“不知怎麼地” },
-{ en:“barely”,pos:“adv.”,zh:“幾乎不” },
-{ en:“invaluable”,pos:“adj.”,zh:“非常寶貴的” },
-{ en:“encouragement”,pos:“n.”,zh:“鼓勵” },
-{ en:“encourage”,pos:“vt.”,zh:“鼓勵” },
-{ en:“discourage”,pos:“vt.”,zh:“阻止；使氣餒” },
-{ en:“concert”,pos:“n.”,zh:“音樂會” },
-{ en:“receive”,pos:“vt.”,zh:“收到；獲得” },
-{ en:“dazzle”,pos:“vt.”,zh:“使讚嘆；使目眩” },
-{ en:“potential”,pos:“n./adj.”,zh:“潛力；潛在的” },
-{ en:“scream”,pos:“n./vi.”,zh:“尖叫” },
-{ en:“dizzy”,pos:“adj.”,zh:“頭暈目眩的” },
-{ en:“overseas”,pos:“adv./adj.”,zh:“在海外；海外的” },
-{ en:“determination”,pos:“n.”,zh:“決心” },
-{ en:“faith”,pos:“n.”,zh:“信心” },
-{ en:“faithful”,pos:“adj.”,zh:“忠誠的” },
-{ en:“pursue”,pos:“vt.”,zh:“追求” },
-{ en:“pursuit”,pos:“n.”,zh:“追求” },
-{ en:“familiar”,pos:“adj.”,zh:“熟悉的” },
-{ en:“urge”,pos:“n./vt.”,zh:“衝動；催促” },
-{ en:“strategy”,pos:“n.”,zh:“策略” },
-{ en:“visible”,pos:“adj.”,zh:“看得見的” },
-{ en:“profitable”,pos:“adj.”,zh:“有利潤的” },
-{ en:“profit”,pos:“n./vi.”,zh:“利潤；獲利” },
-{ en:“similar”,pos:“adj.”,zh:“相似的” },
-{ en:“similarity”,pos:“n.”,zh:“相似性” },
-{ en:“similarly”,pos:“adv.”,zh:“同樣地” },
-{ en:“aim”,pos:“vt./n.”,zh:“針對；目的” },
-{ en:“impulse”,pos:“n.”,zh:“衝動” },
-{ en:“display”,pos:“vt./n.”,zh:“展示” },
-{ en:“offer”,pos:“n./vt.”,zh:“特價；提供” },
-{ en:“customer”,pos:“n.”,zh:“顧客” },
-{ en:“advantage”,pos:“n.”,zh:“優勢” },
-{ en:“eventually”,pos:“adv.”,zh:“最後” },
-{ en:“trap”,pos:“n./vt.”,zh:“圈套；困住” },
-{ en:“aware”,pos:“adj.”,zh:“意識到的” },
-{ en:“awareness”,pos:“n.”,zh:“意識” },
-{ en:“clever”,pos:“adj.”,zh:“聰明的” },
-{ en:“detailed”,pos:“adj.”,zh:“詳細的” },
-{ en:“detail”,pos:“n.”,zh:“細節” },
-{ en:“messy”,pos:“adj.”,zh:“凌亂的” },
-{ en:“mess”,pos:“n.”,zh:“凌亂” },
-{ en:“express”,pos:“vt.”,zh:“表達” },
-{ en:“expression”,pos:“n.”,zh:“表達；表情” },
-{ en:“opinion”,pos:“n.”,zh:“意見” },
-{ en:“contrast”,pos:“vt./n.”,zh:“對比” },
-{ en:“horror”,pos:“n.”,zh:“恐怖；恐懼” },
-{ en:“horrible”,pos:“adj.”,zh:“可怕的” },
-{ en:“horrify”,pos:“vt.”,zh:“使恐懼” },
-{ en:“innocence”,pos:“n.”,zh:“純真” },
-{ en:“innocent”,pos:“adj.”,zh:“無辜的；純真的” },
-{ en:“violence”,pos:“n.”,zh:“暴力” },
-{ en:“violent”,pos:“adj.”,zh:“暴力的” },
-{ en:“visual”,pos:“adj.”,zh:“視覺的” },
-{ en:“pollution”,pos:“n.”,zh:“汙染” },
-{ en:“pollute”,pos:“vt.”,zh:“汙染” },
-{ en:“permission”,pos:“n.”,zh:“許可” },
-{ en:“permit”,pos:“vt.”,zh:“許可；允許” },
-{ en:“effort”,pos:“n.”,zh:“努力” },
-{ en:“community”,pos:“n.”,zh:“社區” },
-{ en:“associate”,pos:“vt.”,zh:“聯想；聯繫” },
-{ en:“association”,pos:“n.”,zh:“聯想；聯繫” },
-{ en:“criminal”,pos:“adj./n.”,zh:“犯罪的；罪犯” },
-{ en:“crime”,pos:“n.”,zh:“犯罪行為” },
-{ en:“destructive”,pos:“adj.”,zh:“破壞性的” },
-{ en:“destroy”,pos:“vt.”,zh:“破壞” },
-{ en:“destruction”,pos:“n.”,zh:“破壞” },
+{en:“freedom”,pos:“n.”,zh:“自由”},
+{en:“statue”,pos:“n.”,zh:“雕像”},
+{en:“remove”,pos:“vt.”,zh:“移除”},
+{en:“celebration”,pos:“n.”,zh:“慶祝活動”},
+{en:“celebrate”,pos:“vt.”,zh:“慶祝”},
+{en:“independence”,pos:“n.”,zh:“獨立”},
+{en:“independent”,pos:“adj.”,zh:“獨立的”},
+{en:“monument”,pos:“n.”,zh:“紀念碑”},
+{en:“symbolize”,pos:“vt.”,zh:“象徵”},
+{en:“symbol”,pos:“n.”,zh:“象徵”},
+{en:“symbolic”,pos:“adj.”,zh:“象徵性的”},
+{en:“firmly”,pos:“adv.”,zh:“牢固地；堅定地”},
+{en:“represent”,pos:“vt.”,zh:“代表”},
+{en:“ancient”,pos:“adj.”,zh:“古代的”},
+{en:“slavery”,pos:“n.”,zh:“蓄奴制”},
+{en:“slave”,pos:“n.”,zh:“奴隸”},
+{en:“unfair”,pos:“adj.”,zh:“不公平的”},
+{en:“treatment”,pos:“n.”,zh:“對待；待遇”},
+{en:“tourist”,pos:“n.”,zh:“遊客”},
+{en:“tourism”,pos:“n.”,zh:“旅遊業”},
+{en:“attraction”,pos:“n.”,zh:“有吸引力的地點”},
+{en:“attract”,pos:“vt.”,zh:“吸引”},
+{en:“attractive”,pos:“adj.”,zh:“吸引人的”},
+{en:“landmark”,pos:“n.”,zh:“地標”},
+{en:“globe”,pos:“n.”,zh:“地球；世界”},
+{en:“global”,pos:“adj.”,zh:“全球的”},
+{en:“triumph”,pos:“n.”,zh:“勝利；喜悅”},
+{en:“apply”,pos:“vi.”,zh:“申請”},
+{en:“application”,pos:“n.”,zh:“申請書”},
+{en:“applicant”,pos:“n.”,zh:“申請人”},
+{en:“instrument”,pos:“n.”,zh:“樂器；儀器”},
+{en:“somehow”,pos:“adv.”,zh:“不知怎麼地”},
+{en:“barely”,pos:“adv.”,zh:“幾乎不”},
+{en:“invaluable”,pos:“adj.”,zh:“非常寶貴的”},
+{en:“encouragement”,pos:“n.”,zh:“鼓勵”},
+{en:“encourage”,pos:“vt.”,zh:“鼓勵”},
+{en:“discourage”,pos:“vt.”,zh:“阻止；使氣餒”},
+{en:“concert”,pos:“n.”,zh:“音樂會”},
+{en:“receive”,pos:“vt.”,zh:“收到；獲得”},
+{en:“dazzle”,pos:“vt.”,zh:“使讚嘆；使目眩”},
+{en:“potential”,pos:“n./adj.”,zh:“潛力；潛在的”},
+{en:“scream”,pos:“n./vi.”,zh:“尖叫”},
+{en:“dizzy”,pos:“adj.”,zh:“頭暈目眩的”},
+{en:“overseas”,pos:“adv./adj.”,zh:“在海外；海外的”},
+{en:“determination”,pos:“n.”,zh:“決心”},
+{en:“faith”,pos:“n.”,zh:“信心”},
+{en:“faithful”,pos:“adj.”,zh:“忠誠的”},
+{en:“pursue”,pos:“vt.”,zh:“追求”},
+{en:“pursuit”,pos:“n.”,zh:“追求”},
+{en:“familiar”,pos:“adj.”,zh:“熟悉的”},
+{en:“urge”,pos:“n./vt.”,zh:“衝動；催促”},
+{en:“strategy”,pos:“n.”,zh:“策略”},
+{en:“visible”,pos:“adj.”,zh:“看得見的”},
+{en:“profitable”,pos:“adj.”,zh:“有利潤的”},
+{en:“profit”,pos:“n./vi.”,zh:“利潤；獲利”},
+{en:“similar”,pos:“adj.”,zh:“相似的”},
+{en:“similarity”,pos:“n.”,zh:“相似性”},
+{en:“similarly”,pos:“adv.”,zh:“同樣地”},
+{en:“aim”,pos:“vt./n.”,zh:“針對；目的”},
+{en:“impulse”,pos:“n.”,zh:“衝動”},
+{en:“display”,pos:“vt./n.”,zh:“展示”},
+{en:“offer”,pos:“n./vt.”,zh:“特價；提供”},
+{en:“customer”,pos:“n.”,zh:“顧客”},
+{en:“advantage”,pos:“n.”,zh:“優勢”},
+{en:“eventually”,pos:“adv.”,zh:“最後”},
+{en:“trap”,pos:“n./vt.”,zh:“圈套；困住”},
+{en:“aware”,pos:“adj.”,zh:“意識到的”},
+{en:“awareness”,pos:“n.”,zh:“意識”},
+{en:“clever”,pos:“adj.”,zh:“聰明的”},
+{en:“detailed”,pos:“adj.”,zh:“詳細的”},
+{en:“detail”,pos:“n.”,zh:“細節”},
+{en:“messy”,pos:“adj.”,zh:“凌亂的”},
+{en:“mess”,pos:“n.”,zh:“凌亂”},
+{en:“express”,pos:“vt.”,zh:“表達”},
+{en:“expression”,pos:“n.”,zh:“表達；表情”},
+{en:“opinion”,pos:“n.”,zh:“意見”},
+{en:“contrast”,pos:“vt./n.”,zh:“對比”},
+{en:“horror”,pos:“n.”,zh:“恐怖；恐懼”},
+{en:“horrible”,pos:“adj.”,zh:“可怕的”},
+{en:“horrify”,pos:“vt.”,zh:“使恐懼”},
+{en:“innocence”,pos:“n.”,zh:“純真”},
+{en:“innocent”,pos:“adj.”,zh:“無辜的；純真的”},
+{en:“violence”,pos:“n.”,zh:“暴力”},
+{en:“violent”,pos:“adj.”,zh:“暴力的”},
+{en:“visual”,pos:“adj.”,zh:“視覺的”},
+{en:“pollution”,pos:“n.”,zh:“汙染”},
+{en:“pollute”,pos:“vt.”,zh:“汙染”},
+{en:“permission”,pos:“n.”,zh:“許可”},
+{en:“permit”,pos:“vt.”,zh:“許可；允許”},
+{en:“effort”,pos:“n.”,zh:“努力”},
+{en:“community”,pos:“n.”,zh:“社區”},
+{en:“associate”,pos:“vt.”,zh:“聯想；聯繫”},
+{en:“association”,pos:“n.”,zh:“聯想；聯繫”},
+{en:“criminal”,pos:“adj./n.”,zh:“犯罪的；罪犯”},
+{en:“crime”,pos:“n.”,zh:“犯罪行為”},
+{en:“destructive”,pos:“adj.”,zh:“破壞性的”},
+{en:“destroy”,pos:“vt.”,zh:“破壞”},
+{en:“destruction”,pos:“n.”,zh:“破壞”},
 ];
 
 function shuffle(arr) {
 const a=[…arr];
-for(let i=a.length-1;i>0;i–){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+for(let i=a.length-1;i>0;i–){
+const j=Math.floor(Math.random()*(i+1));
+[a[i],a[j]]=[a[j],a[i]];
+}
 return a;
 }
 
-function SpeakBtn({ text, label }) {
-const [active, setActive] = useState(false);
-function go() {
-if (!window.speechSynthesis) return;
+function SpeakBtn({text,label}) {
+const [active,setActive]=useState(false);
+function go(){
+if(!window.speechSynthesis)return;
 window.speechSynthesis.cancel();
-const u = new SpeechSynthesisUtterance(text);
-u.lang = “en-US”; u.rate = 0.82;
-u.onstart = () => setActive(true);
-u.onend = () => setActive(false);
-u.onerror = () => setActive(false);
+const u=new SpeechSynthesisUtterance(text);
+u.lang=“en-US”;u.rate=0.82;
+u.onstart=()=>setActive(true);
+u.onend=()=>setActive(false);
+u.onerror=()=>setActive(false);
 window.speechSynthesis.speak(u);
 }
-return (
+return(
 <button onClick={go} style={{
-display:“inline-flex”, alignItems:“center”, gap:4,
-background:“none”, border:“1px solid #252530”, borderRadius:6,
-padding:“4px 10px”, cursor:“pointer”, fontFamily:“inherit”, fontSize:12,
-color: active ? “#c8a96e” : “#555”, transition:“color 0.2s”,
+display:“inline-flex”,alignItems:“center”,gap:4,
+background:“none”,border:“1px solid #252530”,borderRadius:6,
+padding:“4px 10px”,cursor:“pointer”,fontFamily:“inherit”,fontSize:12,
+color:active?”#c8a96e”:”#555”,transition:“color 0.2s”,
 }}>
 <span style={{fontSize:14}}>{active?“🔊”:“🔈”}</span>
 {label}
@@ -287,26 +312,26 @@ color: active ? “#c8a96e” : “#555”, transition:“color 0.2s”,
 );
 }
 
-function FillSentence({ sentence, answer, status, userInput }) {
-const parts = sentence.split(”______”);
-return (
-<div style={{ fontSize:15, lineHeight:2, color:”#bbb” }}>
-{parts.map((seg,i) => {
-if (i===parts.length-1) return <span key={i}>{seg}</span>;
-const hint = blankDisplay(answer);
-const revealed = !!status;
-const correct = status===“correct”;
-return (
+function FillSentence({sentence,answer,status,userInput}) {
+const parts=sentence.split(”______”);
+return(
+<div style={{fontSize:15,lineHeight:2.1,color:”#bbb”}}>
+{parts.map((seg,i)=>{
+if(i===parts.length-1)return <span key={i}>{seg}</span>;
+const hint=blankDisplay(answer);
+const revealed=!!status;
+const correct=status===“correct”;
+return(
 <span key={i}>
 {seg}
 <span style={{
-display:“inline-block”, fontFamily:“monospace”, letterSpacing:2,
-padding:“0 8px”, marginInline:2,
+display:“inline-block”,fontFamily:“monospace”,letterSpacing:2,
+padding:“0 8px”,marginInline:2,
 borderBottom:`2px solid ${revealed?(correct?"#6a9f6a":"#b05050"):"#c8a96e"}`,
-color: revealed?(correct?”#6a9f6a”:”#b05050”):”#c8a96e”,
-fontWeight:“bold”, minWidth:64, textAlign:“center”,
+color:revealed?(correct?”#6a9f6a”:”#b05050”):”#c8a96e”,
+fontWeight:“bold”,minWidth:64,textAlign:“center”,
 }}>
-{revealed ? (correct ? userInput : answer) : hint}
+{revealed?(correct?userInput:answer):hint}
 </span>
 </span>
 );
@@ -315,79 +340,85 @@ fontWeight:“bold”, minWidth:64, textAlign:“center”,
 );
 }
 
-export default function App() {
-const [mode, setMode] = useState(“fill”);
-const [range, setRange] = useState(“all”);
-const [queue, setQueue] = useState([]);
-const [idx, setIdx] = useState(0);
-const [input, setInput] = useState(””);
-const [status, setStatus] = useState(null);
-const [score, setScore] = useState({correct:0,wrong:0});
-const [wrongList, setWrongList] = useState([]);
-const [showWrong, setShowWrong] = useState(false);
-const inputRef = useRef(null);
+function App() {
+const [mode,setMode]=useState(“fill”);
+const [range,setRange]=useState(“all”);
+const [queue,setQueue]=useState([]);
+const [idx,setIdx]=useState(0);
+const [input,setInput]=useState(””);
+const [status,setStatus]=useState(null);
+const [score,setScore]=useState({correct:0,wrong:0});
+const [wrongList,setWrongList]=useState([]);
+const [showWrong,setShowWrong]=useState(false);
+const inputRef=useRef(null);
 
-const buildQueue = useCallback((m, r) => {
+const buildQueue=useCallback((m,r)=>{
 let data;
-if (m===“fill”) {
+if(m===“fill”){
 const a=FILL_A.map(x=>({…x,part:“A”}));
 const b=FILL_B.map(x=>({…x,part:“B”}));
-data = r===“a”?a : r===“b”?b : […a,…b];
-} else {
+data=r===“a”?a:r===“b”?b:[…a,…b];
+}else{
 const a=WORDS_A.map(x=>({…x,part:“A”}));
 const b=WORDS_B.map(x=>({…x,part:“B”}));
-data = r===“a”?a : r===“b”?b : […a,…b];
+data=r===“a”?a:r===“b”?b:[…a,…b];
 }
 setQueue(shuffle(data));
-setIdx(0); setInput(””); setStatus(null);
-setScore({correct:0,wrong:0}); setWrongList([]); setShowWrong(false);
+setIdx(0);setInput(””);setStatus(null);
+setScore({correct:0,wrong:0});setWrongList([]);setShowWrong(false);
 },[]);
 
-useEffect(()=>{ buildQueue(mode,range); },[]);
+useEffect(()=>{buildQueue(“fill”,“all”);},[]);
 
-const current = queue[idx];
-const total = queue.length;
-const done = idx >= total;
-const progress = total>0 ? (idx/total)*100 : 0;
+const current=queue[idx];
+const total=queue.length;
+const done=idx>=total;
+const progress=total>0?(idx/total)*100:0;
 
 useEffect(()=>{
-if (mode===“word” && current) setTimeout(()=>speak(current.en),180);
-},[idx, mode]);
+if(mode===“word”&&current)setTimeout(()=>speak(current.en),180);
+},[idx,mode]);
 
-function checkAnswer() {
-if (!current||status) return;
-const raw = input.trim();
-const correct = mode===“fill”
-? current.a.some(a=>a.toLowerCase()===raw.toLowerCase())
-: raw===current.zh;
+function checkAnswer(){
+if(!current||status)return;
+const raw=input.trim();
+const correct=mode===“fill”
+?current.a.some(a=>a.toLowerCase()===raw.toLowerCase())
+:raw===current.zh;
 setStatus(correct?“correct”:“wrong”);
-if (correct) setScore(s=>({…s,correct:s.correct+1}));
-else { setScore(s=>({…s,wrong:s.wrong+1})); setWrongList(w=>[…w,{…current,yourAnswer:raw}]); }
+if(correct)setScore(s=>({…s,correct:s.correct+1}));
+else{setScore(s=>({…s,wrong:s.wrong+1}));setWrongList(w=>[…w,{…current,yourAnswer:raw}]);}
 }
 
-function skip() {
-if (!current||status) return;
+function skip(){
+if(!current||status)return;
 setStatus(“wrong”);
 setScore(s=>({…s,wrong:s.wrong+1}));
 setWrongList(w=>[…w,{…current,yourAnswer:””}]);
 }
 
-function next() {
-if (idx+1>=total) setIdx(total);
-else { setIdx(i=>i+1); setInput(””); setStatus(null); }
+function next(){
+if(idx+1>=total)setIdx(total);
+else{setIdx(i=>i+1);setInput(””);setStatus(null);}
 setTimeout(()=>inputRef.current?.focus(),80);
 }
 
-function handleKey(e) {
-if (e.key===“Enter”) { if (status) next(); else checkAnswer(); }
+function handleKey(e){
+if(e.key===“Enter”){if(status)next();else checkAnswer();}
 }
 
-return (
+const btn=(label,onClick,style={})=>(
+<button onClick={onClick} style={{
+border:“none”,cursor:“pointer”,fontFamily:“inherit”,borderRadius:10,
+fontSize:14,transition:“all 0.15s”,…style
+}}>{label}</button>
+);
+
+return(
 <div style={{
-minHeight:“100vh”, background:”#0d0d12”, color:”#e0dcd4”,
-fontFamily:”‘Georgia’,serif”,
-display:“flex”, flexDirection:“column”, alignItems:“center”,
-padding:“22px 16px 60px”,
+minHeight:“100vh”,background:”#0d0d12”,color:”#e0dcd4”,
+fontFamily:“Georgia,serif”,display:“flex”,flexDirection:“column”,
+alignItems:“center”,padding:“22px 16px 60px”,
 }}>
 {/* Header */}
 <div style={{textAlign:“center”,marginBottom:22}}>
@@ -396,7 +427,7 @@ padding:“22px 16px 60px”,
 </div>
 
 ```
-  {/* Mode toggle */}
+  {/* Controls */}
   <div style={{width:"100%",maxWidth:500,display:"flex",flexDirection:"column",gap:8,marginBottom:18}}>
     <div style={{display:"flex",gap:8}}>
       {[["fill","文意字彙（拼字）"],["word","英翻中（單字）"]].map(([v,label])=>(
@@ -406,7 +437,6 @@ padding:“22px 16px 60px”,
           background:mode===v?"#c8a96e":"#181820",
           color:mode===v?"#0d0d12":"#555",
           fontWeight:mode===v?"bold":"normal",
-          transition:"all 0.15s",
         }}>{label}</button>
       ))}
     </div>
@@ -418,7 +448,6 @@ padding:“22px 16px 60px”,
           background:range===v?"#1c1c28":"#131318",
           color:range===v?"#c8a96e":"#444",
           borderBottom:range===v?"2px solid #c8a96e":"2px solid transparent",
-          transition:"all 0.15s",
         }}>{label}</button>
       ))}
     </div>
@@ -438,15 +467,11 @@ padding:“22px 16px 60px”,
 
   {/* Card */}
   <div style={{
-    width:"100%",maxWidth:500,
-    background:"#12121a",
-    borderRadius:16,
-    padding:"26px 22px 22px",
-    boxShadow:"0 8px 48px rgba(0,0,0,0.7)",
-    minHeight:320,
-    display:"flex",flexDirection:"column",justifyContent:"space-between",
+    width:"100%",maxWidth:500,background:"#12121a",borderRadius:16,
+    padding:"26px 22px 22px",boxShadow:"0 8px 48px rgba(0,0,0,0.7)",
+    minHeight:320,display:"flex",flexDirection:"column",justifyContent:"space-between",
   }}>
-    {done ? (
+    {done?(
       <div style={{textAlign:"center"}}>
         <div style={{fontSize:40,marginBottom:8}}>
           {score.wrong===0?"🎯":score.correct>=score.wrong?"👍":"📚"}
@@ -493,43 +518,35 @@ padding:“22px 16px 60px”,
           </div>
         )}
         <div style={{display:"flex",gap:8}}>
-          <button onClick={()=>buildQueue(mode,range)} style={{
-            flex:1,padding:"11px 0",borderRadius:10,border:"none",cursor:"pointer",
-            background:"#c8a96e",color:"#0d0d12",fontWeight:"bold",fontSize:14,fontFamily:"inherit"
-          }}>再練一次</button>
-          {wrongList.length>0&&(
-            <button onClick={()=>{
-              setQueue(shuffle([...wrongList]));
-              setIdx(0);setInput("");setStatus(null);
-              setScore({correct:0,wrong:0});setWrongList([]);setShowWrong(false);
-            }} style={{
-              flex:1,padding:"11px 0",borderRadius:10,border:"none",cursor:"pointer",
-              background:"#1c1c28",color:"#c8a96e",fontWeight:"bold",fontSize:14,fontFamily:"inherit"
-            }}>只練錯題</button>
-          )}
+          {btn("再練一次",()=>buildQueue(mode,range),{
+            flex:1,padding:"11px 0",background:"#c8a96e",color:"#0d0d12",fontWeight:"bold"
+          })}
+          {wrongList.length>0&&btn("只練錯題",()=>{
+            setQueue(shuffle([...wrongList]));
+            setIdx(0);setInput("");setStatus(null);
+            setScore({correct:0,wrong:0});setWrongList([]);setShowWrong(false);
+          },{flex:1,padding:"11px 0",background:"#1c1c28",color:"#c8a96e",fontWeight:"bold"})}
         </div>
       </div>
-    ) : current ? (
+    ):current?(
       <>
         <div>
           <div style={{fontSize:10,letterSpacing:3,color:"#383848",textTransform:"uppercase",marginBottom:14}}>
             {mode==="fill"?"Fill in the Blank":"English → Chinese"} · Part {current.part}
           </div>
 
-          {mode==="fill" ? (
+          {mode==="fill"?(
             <div style={{marginBottom:16}}>
               <FillSentence
-                sentence={current.q}
-                answer={current.a[0]}
-                status={status}
-                userInput={input}
+                sentence={current.q} answer={current.a[0]}
+                status={status} userInput={input}
               />
               <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
                 <SpeakBtn text={current.q.replace("______",current.a[0])} label="播放例句"/>
                 <SpeakBtn text={current.a[0]} label="播放單字"/>
               </div>
             </div>
-          ) : (
+          ):(
             <div style={{textAlign:"center",padding:"8px 0 18px"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:6}}>
                 <span style={{fontSize:34,fontWeight:"bold",color:"#f0ebe0",letterSpacing:1}}>
@@ -549,19 +566,16 @@ padding:“22px 16px 60px”,
 
           {!status&&(
             <input
-              ref={inputRef}
-              value={input}
+              ref={inputRef} value={input}
               onChange={e=>setInput(e.target.value)}
               onKeyDown={handleKey}
               placeholder={mode==="fill"?"拼出單字…":"輸入中文意思…"}
               autoFocus
               style={{
-                width:"100%",boxSizing:"border-box",
-                background:"#0d0d12",
-                border:"2px solid #1e1e2c",
-                borderRadius:10,padding:"11px 14px",
-                color:"#e0dcd4",fontSize:16,fontFamily:"monospace",
-                outline:"none",
+                width:"100%",background:"#0d0d12",
+                border:"2px solid #1e1e2c",borderRadius:10,
+                padding:"11px 14px",color:"#e0dcd4",
+                fontSize:16,fontFamily:"monospace",outline:"none",
               }}
             />
           )}
@@ -570,8 +584,8 @@ padding:“22px 16px 60px”,
             <div style={{marginTop:10,fontSize:14,fontWeight:"bold",
               color:status==="correct"?"#5a8f5a":"#9f5050"}}>
               {status==="correct"
-                ? "✓ 正確！"
-                : `✗ 正解：${mode==="fill"?current.a[0]:current.zh}`}
+                ?"✓ 正確！"
+                :`✗ 正解：${mode==="fill"?current.a[0]:current.zh}`}
               {status==="wrong"&&input&&(
                 <span style={{color:"#555",fontWeight:"normal",fontSize:12,marginLeft:8}}>
                   （你輸入：{input}）
@@ -584,24 +598,19 @@ padding:“22px 16px 60px”,
         <div style={{display:"flex",gap:8,marginTop:20}}>
           {!status?(
             <>
-              <button onClick={skip} style={{
-                padding:"10px 16px",borderRadius:10,
-                border:"1px solid #1e1e2c",background:"none",
-                color:"#444",cursor:"pointer",fontSize:13,fontFamily:"inherit"
-              }}>跳過</button>
-              <button onClick={checkAnswer} style={{
-                flex:1,padding:"10px 0",borderRadius:10,border:"none",
-                background:"#c8a96e",color:"#0d0d12",
-                fontWeight:"bold",fontSize:14,cursor:"pointer",fontFamily:"inherit"
-              }}>確認</button>
+              {btn("跳過",skip,{
+                padding:"10px 16px",border:"1px solid #1e1e2c",
+                background:"none",color:"#444",fontSize:13
+              })}
+              {btn("確認",checkAnswer,{
+                flex:1,padding:"10px 0",
+                background:"#c8a96e",color:"#0d0d12",fontWeight:"bold"
+              })}
             </>
-          ):(
-            <button onClick={next} style={{
-              flex:1,padding:"11px 0",borderRadius:10,border:"none",
-              background:"#1c1c28",color:"#c8a96e",
-              fontWeight:"bold",fontSize:14,cursor:"pointer",fontFamily:"inherit"
-            }}>下一題 →</button>
-          )}
+          ):btn("下一題 →",next,{
+            flex:1,padding:"11px 0",
+            background:"#1c1c28",color:"#c8a96e",fontWeight:"bold"
+          })}
         </div>
       </>
     ):null}
@@ -612,3 +621,9 @@ padding:“22px 16px 60px”,
 
 );
 }
+
+ReactDOM.createRoot(document.getElementById(“root”)).render(<App/>);
+</script>
+
+</body>
+</html>
