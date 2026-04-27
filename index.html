@@ -1,770 +1,614 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>分冊單元單字本 · 閱讀 · 測驗 · 單字書</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
-            background: #f5f7fa;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 16px 10px 30px;
-        }
-        .app {
-            max-width: 550px;
-            width: 100%;
-            background: white;
-            border-radius: 32px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            padding: 20px 18px 28px;
-        }
-        h1 { font-size: 1.7rem; font-weight: 600; color: #1e293b; margin-bottom: 8px; }
-        .top-bar { margin-bottom: 15px; }
-        .book-select {
-            width: 100%;
-            padding: 14px 16px;
-            border-radius: 30px;
-            border: 1.5px solid #d1d5db;
-            background: white;
-            font-size: 1rem;
-            font-weight: 500;
-            margin-bottom: 12px;
-        }
-        .unit-panel {
-            background: #f8fafc;
-            border-radius: 24px;
-            padding: 12px 16px;
-            margin-bottom: 12px;
-        }
-        .unit-title { font-weight: 600; margin-bottom: 8px; }
-        .unit-checkboxes {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px 20px;
-        }
-        .unit-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .mode-switch {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 16px;
-        }
-        .mode-btn {
-            flex: 1;
-            background: #eef2ff;
-            border: none;
-            padding: 12px 0;
-            border-radius: 30px;
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1e293b;
-            cursor: pointer;
-            border: 1px solid #dbe7f2;
-            text-align: center;
-        }
-        .mode-btn.active {
-            background: #2563eb;
-            color: white;
-            border-color: #2563eb;
-        }
-        .filter-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 8px 0 16px;
-        }
-        .mark-filter {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #f1f5f9;
-            padding: 8px 16px;
-            border-radius: 30px;
-            cursor: pointer;
-        }
-        .card {
-            background: #fff;
-            border-radius: 28px;
-            padding: 24px 20px;
-            margin: 12px 0 20px;
-            border: 1px solid #edf2f7;
-            box-shadow: 0 8px 20px -6px rgba(0,0,0,0.1);
-        }
-        .word-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 6px;
-        }
-        .english-word {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: #0f172a;
-            word-break: break-word;
-        }
-        .mark-btn {
-            background: none;
-            border: none;
-            font-size: 2rem;
-            cursor: pointer;
-            color: #cbd5e1;
-            padding: 0 8px;
-        }
-        .mark-btn.marked { color: #eab308; }
-        .chinese-block {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #334155;
-            margin: 8px 0 4px;
-        }
-        .collocation {
-            font-size: 1rem;
-            color: #64748b;
-            margin-bottom: 20px;
-            border-left: 4px solid #94a3b8;
-            padding-left: 14px;
-            background: #f8fafc;
-            border-radius: 0 12px 12px 0;
-            white-space: pre-wrap;
-        }
-        .action-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-        }
-        .btn {
-            flex: 1;
-            background: #f1f5f9;
-            border: none;
-            padding: 16px;
-            border-radius: 40px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            border: 1px solid #e2e8f0;
-        }
-        .btn-primary { background: #2563eb; color: white; border: none; }
-        .progress-indicator {
-            display: flex;
-            justify-content: space-between;
-            margin: 16px 0 8px;
-            color: #475569;
-        }
-        .spell-input {
-            width: 100%;
-            padding: 18px;
-            font-size: 1.3rem;
-            border: 2px solid #dbe7f2;
-            border-radius: 28px;
-            outline: none;
-        }
-        .feedback { min-height: 38px; margin-top: 10px; }
-        .correct { color: #0d9488; } .wrong { color: #dc2626; }
-        .word-list {
-            max-height: 450px;
-            overflow-y: auto;
-            border-radius: 24px;
-            background: #f8fafc;
-            padding: 8px;
-        }
-        .list-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 8px;
-            border-bottom: 1px solid #e2e8f0;
-            gap: 8px;
-        }
-        .list-item .info { flex: 1; }
-        .list-item .word { font-weight: 700; }
-        .small-btn {
-            background: none;
-            border: 1px solid #cbd5e1;
-            padding: 4px 10px;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-        .batch-area {
-            margin-top: 20px;
-            padding: 16px;
-            background: #f1f5f9;
-            border-radius: 24px;
-        }
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border-radius: 20px;
-            border: 1px solid #cbd5e1;
-            font-size: 0.9rem;
-        }
-        .filter-select {
-            padding: 8px 12px;
-            border-radius: 20px;
-            border: 1px solid #cbd5e1;
-            background: white;
-        }
-    </style>
-</head>
-<body>
-<div class="app">
-    <h1>分冊單元單字本</h1>
+import { useState, useEffect, useRef, useCallback } from “react”;
 
-    <!-- 冊別選擇 -->
-    <div class="top-bar">
-        <select id="bookSelect" class="book-select">
-            <option value="Book1" selected>第一冊 (U1~U6)</option>
-            <option value="Book2">第二冊</option>
-            <option value="Book3">第三冊</option>
-            <option value="Book4">第四冊</option>
-            <option value="Book5">第五冊</option>
-            <option value="Book6">第六冊</option>
-        </select>
-    </div>
+function speak(text, rate = 0.82) {
+if (!window.speechSynthesis) return;
+window.speechSynthesis.cancel();
+const u = new SpeechSynthesisUtterance(text);
+u.lang = “en-US”; u.rate = rate;
+window.speechSynthesis.speak(u);
+}
 
-    <!-- 單元勾選區域 (用於閱讀與測驗模式) -->
-    <div class="unit-panel" id="unitPanel">
-        <div class="unit-title">選擇單元 (可複選)</div>
-        <div class="unit-checkboxes" id="unitCheckboxes"></div>
-        <div style="margin-top:8px; font-size:0.85rem; color:#64748b;" id="unitSummary"></div>
-    </div>
+function blankDisplay(word) {
+if (!word) return “_**”;
+return word.split(” “).map(w => {
+if (w.length <= 1) return w;
+if (w.length === 2) return w[0] + “*”;
+return w[0] + “*”.repeat(w.length - 2) + w[w.length - 1];
+}).join(” “);
+}
 
-    <!-- 模式切換 -->
-    <div class="mode-switch">
-        <div class="mode-btn active" data-mode="read">閱讀模式</div>
-        <div class="mode-btn" data-mode="quiz">測驗模式</div>
-        <div class="mode-btn" data-mode="book">單字書</div>
-    </div>
+const FILL_A = [
+{ q: “Regular ______ of the machines is necessary to keep the factory running smoothly.”, a: [“maintenance”] },
+{ q: “The company made a ______ profit this year, far exceeding everyone’s expectations.”, a: [“substantial”] },
+{ q: “Young graduates often face uncertain ______ in today’s competitive job market.”, a: [“prospects”] },
+{ q: “The lawyer struggled to ______ his client’s actions in front of the judge.”, a: [“justify”] },
+{ q: “The gallery showcases ______ works of art created by artists who are still active today.”, a: [“contemporary”] },
+{ q: “Several neighboring countries formed a ______ to protect their shared economic interests.”, a: [“league”] },
+{ q: “She had only a vague ______ of what the new project would involve.”, a: [“notion”] },
+{ q: “The tailor agreed to ______ the dress so that it would fit perfectly.”, a: [“alter”] },
+{ q: “The ______ Court is the highest judicial authority in the nation.”, a: [“supreme”,“Supreme”] },
+{ q: “The manager was told to ______ the new policy without delay.”, a: [“execute”] },
+{ q: “All students must ______ their assignments to the teacher by Friday.”, a: [“submit”] },
+{ q: “The millionaire left his entire ______ to his three children after his death.”, a: [“estate”] },
+{ q: “The ______ of the café was decorated with warm wooden furniture and soft lighting.”, a: [“interior”] },
+{ q: “The investigation revealed that the suspect had been ______ to steal company secrets for months.”, a: [“scheming”] },
+{ q: “She went to the mall to ______ a birthday gift for her best friend.”, a: [“purchase”] },
+{ q: “The professor ______ several important studies to support his controversial theory.”, a: [“cited”] },
+{ q: “Only a small ______ of the students managed to pass the final examination.”, a: [“proportion”] },
+{ q: “After a long negotiation, both sides agreed to ______ on some of their demands.”, a: [“yield”] },
+{ q: “The roads were flooded; ______, many commuters chose to stay home that day.”, a: [“hence”] },
+{ q: “Traditional customs still ______ in many remote villages where modernization has not yet arrived.”, a: [“prevail”] },
+{ q: “The ______ quality of the students’ work has improved significantly this semester.”, a: [“overall”] },
+{ q: “Standing at the edge of the cliff filled her with a deep sense of ______.”, a: [“awe”] },
+{ q: “After years of drought, the once-fertile land had become completely ______.”, a: [“barren”] },
+{ q: “A street ______ sold fresh fruit and vegetables outside the train station every morning.”, a: [“vendor”] },
+{ q: “In the worst possible ______, the entire project would have to be cancelled.”, a: [“scenario”] },
+{ q: “The new security system is highly ______ and can detect any unusual activity within seconds.”, a: [“sophisticated”] },
+{ q: “The coach ______ the team’s championship victory to months of hard training and discipline.”, a: [“attributed”] },
+{ q: “The goods were damaged while in ______ and never reached the customer.”, a: [“transit”] },
+{ q: “The scale of the earthquake was ______; no one had ever seen anything like it before.”, a: [“unprecedented”] },
+{ q: “She showed no interest ______ in joining the new student club.”, a: [“whatsoever”] },
+{ q: “The building’s ______ team inspects all the equipment every three months without fail.”, a: [“maintenance”] },
+{ q: “The new policy will bring ______ changes to how the company manages its finances.”, a: [“substantial”] },
+{ q: “She has bright ______ ahead of her in the field of medicine.”, a: [“prospects”] },
+{ q: “It is difficult to ______ spending such a large sum of money on a single project.”, a: [“justify”] },
+{ q: “The museum is famous for its collection of ______ art by artists who are still working today.”, a: [“contemporary”] },
+{ q: “Two powerful nations formed a military ______ to defend their shared borders.”, a: [“league”] },
+{ q: “I had no ______ that the meeting would last more than three hours.”, a: [“notion”] },
+{ q: “The architect decided to ______ the design after receiving feedback from the clients.”, a: [“alter”] },
+{ q: “The ______ ruler made all final decisions and answered to no one above him.”, a: [“supreme”] },
+{ q: “The general ordered his troops to ______ the plan before dawn the following morning.”, a: [“execute”] },
+{ q: “The application must be ______ before the end of the month to be considered valid.”, a: [“submitted”] },
+{ q: “He inherited a large ______ in the countryside, including several houses and farmland.”, a: [“estate”] },
+{ q: “The ______ of the ancient temple was covered with beautiful carvings and golden decorations.”, a: [“interior”] },
+{ q: “The politician was accused of ______ against his own party to gain personal power.”, a: [“scheming”] },
+{ q: “He decided to ______ a new computer after his old one stopped working.”, a: [“purchase”] },
+{ q: “The speaker ______ a famous philosopher to add weight to his argument.”, a: [“cited”] },
+{ q: “The ______ of boys to girls in the science class is approximately two to one.”, a: [“proportion”] },
+{ q: “The old tree finally ______ to the force of the powerful wind and fell to the ground.”, a: [“yielded”] },
+];
 
-    <!-- 測驗專用篩選 -->
-    <div id="quizFilterRow" class="filter-row" style="display: none;">
-        <label class="mark-filter">
-            <input type="checkbox" id="onlyMarkedCheck"> 僅測驗已標記單字
-        </label>
-    </div>
+const FILL_B = [
+{ q: “Despite the danger, the rescue team ______ managed to reach all the survivors in time.”, a: [“somehow”] },
+{ q: “When it comes to preserving ______ ruins, governments must be willing to invest both time and money.”, a: [“ancient”] },
+{ q: “The students could ______ hear the teacher’s voice from the back of the large lecture hall.”, a: [“barely”] },
+{ q: “Her ______ to become a doctor never wavered, even when the exams seemed impossible to pass.”, a: [“determination”] },
+{ q: “The city decided to ______ the old fountain and replace it with a modern sculpture.”, a: [“remove”] },
+{ q: “Ada’s music teacher gave her the ______ she needed to keep practicing when things got difficult.”, a: [“encouragement”] },
+{ q: “The broken chains at Lady Liberty’s feet ______ freedom from slavery and unfair treatment.”, a: [“symbolize”] },
+{ q: “Ada played the ______ her grandma had signed her up to learn, and over time she became very skilled.”, a: [“instrument”] },
+{ q: “Many parents ______ their children to read by taking them to the library every weekend.”, a: [“encourage”] },
+{ q: “Standing in front of the ancient ******, visitors felt a deep connection to the past.”, a: [“monument”] },
+{ q: “She had ______ in the children’s ability to improve, and that belief kept them going.”, a: [“faith”] },
+{ q: “It was ______ that such a talented young artist had gone unnoticed for so many years.”, a: [“unfair”] },
+{ q: “The city’s most famous ______ attracts millions of tourists from around the globe every year.”, a: [“landmark”] },
+{ q: “****** the rainy weather, thousands of fans gathered outside to welcome their favorite band home.”, a: [“Even though”] },
+{ q: “The local ______ came together to clean up the park after the devastating storm.”, a: [“community”] },
+{ q: “She had a sudden ______ to quit her job and travel around the world for a year.”, a: [“impulse”] },
+{ q: “All visitors must obtain ______ before taking photographs inside the museum.”, a: [“permission”] },
+{ q: “Their performance ______d audiences around the world, earning them international fame.”, a: [“dazzle”] },
+{ q: “The company’s new product proved highly ______, earning record profits in its first month.”, a: [“profitable”] },
+{ q: “The documentary explored the ______ of war through the eyes of ordinary civilians.”, a: [“horror”] },
+{ q: “She ______ her goal of becoming an Olympic swimmer by training six hours every day.”, a: [“pursued”] },
+{ q: “The artist used bright colors to ______ the beauty of nature in her latest painting.”, a: [“express”] },
+{ q: “The teacher urged the students to ______ their ideas clearly and confidently in their essays.”, a: [“express”] },
+{ q: “The loud ______s of the crowd could be heard from blocks away as the team scored the winning goal.”, a: [“scream”] },
+{ q: “She was surprised to find that her new colleagues were very ______ with her preferred working style.”, a: [“familiar”] },
+{ q: “The ______ of the ancient painting was so great that visitors lined up for hours to see it.”, a: [“attraction”] },
+{ q: “The two designs are ______ in many ways but differ in terms of color and material.”, a: [“similar”] },
+{ q: “The players were filled with ______ as they lifted the championship trophy above their heads.”, a: [“triumph”] },
+{ q: “In ______ with traditional methods, the new technique is faster and less expensive.”, a: [“contrast”] },
+{ q: “The ______ artist was arrested for damaging public property with spray paint.”, a: [“criminal”] },
+{ q: “She barely had enough ______ left to finish the last few pages of her lengthy report.”, a: [“effort”] },
+{ q: “The ______ of the damage caused by the storm was visible across the entire neighborhood.”, a: [“destruction”] },
+{ q: “The local government worked hard to raise ______ about the dangers of air pollution.”, a: [“awareness”] },
+{ q: “All students must ______ for the scholarship before the end of the school term.”, a: [“apply”] },
+{ q: “Some researchers believe that ______ in video games can lead to more aggressive behavior in real life.”, a: [“violence”] },
+{ q: “The country achieved ______ from colonial rule after many long years of struggle.”, a: [“independence”] },
+{ q: “Performing ______ for several years gave her an experience that no classroom could ever replicate.”, a: [“overseas”] },
+{ q: “The audience was so moved by the music that many were ______ away by the emotion of the performance.”, a: [“carried”] },
+{ q: “New buildings in the city are often designed to ______ tourists and boost the local economy.”, a: [“attract”] },
+{ q: “She felt ______ after spinning around on the dance floor for so long.”, a: [“dizzy”] },
+{ q: “The coach said the team would need to put in far more ______ if they hoped to qualify for the finals.”, a: [“effort”] },
+{ q: “The ______ power of the typhoon left behind a trail of destruction across the entire coastline.”, a: [“destructive”] },
+{ q: “The store placed its most popular products at eye level so they would be easily ______ to shoppers.”, a: [“visible”] },
+{ q: “She filled out a long ______ form before she was finally accepted into the music training program.”, a: [“application”] },
+{ q: “The ancient temple is recognized as one of the most famous ______s in the entire country.”, a: [“landmark”] },
+{ q: “The tour guide provided a ______ explanation of the history behind each painting in the gallery.”, a: [“detailed”] },
+{ q: “The children could ______ wait for the performance to begin; they were absolutely thrilled with excitement.”, a: [“barely”] },
+{ q: “After much hard work and personal sacrifice, she ______ achieved her dream of becoming a concert pianist.”, a: [“eventually”] },
+{ q: “Raising ______ about environmental issues is the first and most important step toward making a real change.”, a: [“awareness”] },
+{ q: “The workers put a great deal of ______ into carefully restoring the ancient painting to its original state.”, a: [“effort”] },
+];
 
-    <!-- 主要內容區 -->
-    <div id="contentArea"></div>
+const WORDS_A = [
+{ en:“maintenance”,pos:“n.”,zh:“保養；維護” },
+{ en:“substantial”,pos:“adj.”,zh:“大量的；相當大的” },
+{ en:“prospects”,pos:“n.”,zh:“前景；展望” },
+{ en:“justify”,pos:“vt.”,zh:“說明⋯的正當理由” },
+{ en:“contemporary”,pos:“adj.”,zh:“當代的” },
+{ en:“league”,pos:“n.”,zh:“聯盟” },
+{ en:“notion”,pos:“n.”,zh:“概念；觀念” },
+{ en:“alter”,pos:“vt.”,zh:“修改；改變” },
+{ en:“supreme”,pos:“adj.”,zh:“最高的” },
+{ en:“execute”,pos:“vt.”,zh:“執行” },
+{ en:“submit”,pos:“vt.”,zh:“提交；呈交” },
+{ en:“estate”,pos:“n.”,zh:“地產；財產” },
+{ en:“interior”,pos:“n./adj.”,zh:“內部；內裝” },
+{ en:“scheme”,pos:“vi./n.”,zh:“密謀；計畫；陰謀” },
+{ en:“partly”,pos:“adv.”,zh:“部分地” },
+{ en:“purchase”,pos:“vt./n.”,zh:“購買” },
+{ en:“cite”,pos:“vt.”,zh:“引用；引述” },
+{ en:“proportion”,pos:“n.”,zh:“比例” },
+{ en:“yield”,pos:“vi./vt.”,zh:“讓步；屈服；產出” },
+{ en:“hence”,pos:“adv.”,zh:“因此” },
+{ en:“prevail”,pos:“vi.”,zh:“盛行；佔優勢” },
+{ en:“overall”,pos:“adv./adj.”,zh:“整體而言；總體的” },
+{ en:“awe”,pos:“n.”,zh:“敬畏” },
+{ en:“barren”,pos:“adj.”,zh:“荒蕪的” },
+{ en:“vendor”,pos:“n.”,zh:“攤販；賣家” },
+{ en:“scenario”,pos:“n.”,zh:“情況；情境” },
+{ en:“sophisticated”,pos:“adj.”,zh:“精密的；複雜的” },
+{ en:“attribute”,pos:“vt.”,zh:“歸因於” },
+{ en:“transit”,pos:“n.”,zh:“運輸；過境” },
+{ en:“unprecedented”,pos:“adj.”,zh:“前所未有的” },
+{ en:“whatsoever”,pos:“adv.”,zh:”（否定句強調）絲毫；任何” },
+];
 
-    <!-- 批量新增／管理區 (單字書內顯示) -->
-    <div id="batchAddPanel" style="display: none;" class="batch-area">
-        <details open>
-            <summary style="font-weight:600; margin-bottom:10px;">➕ 批量新增自訂單字</summary>
-            <div style="margin-top:10px;">
-                <label>冊別：
-                    <select id="customBookSelect" class="filter-select">
-                        <option value="Book1">第一冊</option><option value="Book2">第二冊</option><option value="Book3">第三冊</option>
-                        <option value="Book4">第四冊</option><option value="Book5">第五冊</option><option value="Book6">第六冊</option>
-                    </select>
-                </label>
-                <label>單元：<input type="text" id="customUnitInput" placeholder="例: U1" value="U1" style="padding:8px; border-radius:20px; width:80px; border:1px solid #cbd5e1;"></label>
-            </div>
-            <textarea id="batchInput" rows="3" placeholder="每行格式：英文,中文,搭配(選填)&#10;federal,聯邦的,federal funding&#10;stock,股票；存貨,be in stock" style="margin-top:12px;"></textarea>
-            <button class="btn" id="batchAddBtn" style="margin-top:8px;">匯入至指定冊別/單元</button>
-            <div class="small-note" style="margin-top:6px;">自訂單字可於單字書中刪除，內建單字不可刪。</div>
-        </details>
-    </div>
+const WORDS_B = [
+{ en:“freedom”,pos:“n.”,zh:“自由” },
+{ en:“statue”,pos:“n.”,zh:“雕像” },
+{ en:“remove”,pos:“vt.”,zh:“移除” },
+{ en:“celebration”,pos:“n.”,zh:“慶祝活動” },
+{ en:“celebrate”,pos:“vt.”,zh:“慶祝” },
+{ en:“independence”,pos:“n.”,zh:“獨立” },
+{ en:“independent”,pos:“adj.”,zh:“獨立的” },
+{ en:“monument”,pos:“n.”,zh:“紀念碑” },
+{ en:“symbolize”,pos:“vt.”,zh:“象徵” },
+{ en:“symbol”,pos:“n.”,zh:“象徵” },
+{ en:“symbolic”,pos:“adj.”,zh:“象徵性的” },
+{ en:“firmly”,pos:“adv.”,zh:“牢固地；堅定地” },
+{ en:“represent”,pos:“vt.”,zh:“代表” },
+{ en:“ancient”,pos:“adj.”,zh:“古代的” },
+{ en:“slavery”,pos:“n.”,zh:“蓄奴制” },
+{ en:“slave”,pos:“n.”,zh:“奴隸” },
+{ en:“unfair”,pos:“adj.”,zh:“不公平的” },
+{ en:“treatment”,pos:“n.”,zh:“對待；待遇” },
+{ en:“tourist”,pos:“n.”,zh:“遊客” },
+{ en:“tourism”,pos:“n.”,zh:“旅遊業” },
+{ en:“attraction”,pos:“n.”,zh:“有吸引力的地點” },
+{ en:“attract”,pos:“vt.”,zh:“吸引” },
+{ en:“attractive”,pos:“adj.”,zh:“吸引人的” },
+{ en:“landmark”,pos:“n.”,zh:“地標” },
+{ en:“globe”,pos:“n.”,zh:“地球；世界” },
+{ en:“global”,pos:“adj.”,zh:“全球的” },
+{ en:“triumph”,pos:“n.”,zh:“勝利；喜悅” },
+{ en:“apply”,pos:“vi.”,zh:“申請” },
+{ en:“application”,pos:“n.”,zh:“申請書” },
+{ en:“applicant”,pos:“n.”,zh:“申請人” },
+{ en:“instrument”,pos:“n.”,zh:“樂器；儀器” },
+{ en:“somehow”,pos:“adv.”,zh:“不知怎麼地” },
+{ en:“barely”,pos:“adv.”,zh:“幾乎不” },
+{ en:“invaluable”,pos:“adj.”,zh:“非常寶貴的” },
+{ en:“encouragement”,pos:“n.”,zh:“鼓勵” },
+{ en:“encourage”,pos:“vt.”,zh:“鼓勵” },
+{ en:“discourage”,pos:“vt.”,zh:“阻止；使氣餒” },
+{ en:“concert”,pos:“n.”,zh:“音樂會” },
+{ en:“receive”,pos:“vt.”,zh:“收到；獲得” },
+{ en:“dazzle”,pos:“vt.”,zh:“使讚嘆；使目眩” },
+{ en:“potential”,pos:“n./adj.”,zh:“潛力；潛在的” },
+{ en:“scream”,pos:“n./vi.”,zh:“尖叫” },
+{ en:“dizzy”,pos:“adj.”,zh:“頭暈目眩的” },
+{ en:“overseas”,pos:“adv./adj.”,zh:“在海外；海外的” },
+{ en:“determination”,pos:“n.”,zh:“決心” },
+{ en:“faith”,pos:“n.”,zh:“信心” },
+{ en:“faithful”,pos:“adj.”,zh:“忠誠的” },
+{ en:“pursue”,pos:“vt.”,zh:“追求” },
+{ en:“pursuit”,pos:“n.”,zh:“追求” },
+{ en:“familiar”,pos:“adj.”,zh:“熟悉的” },
+{ en:“urge”,pos:“n./vt.”,zh:“衝動；催促” },
+{ en:“strategy”,pos:“n.”,zh:“策略” },
+{ en:“visible”,pos:“adj.”,zh:“看得見的” },
+{ en:“profitable”,pos:“adj.”,zh:“有利潤的” },
+{ en:“profit”,pos:“n./vi.”,zh:“利潤；獲利” },
+{ en:“similar”,pos:“adj.”,zh:“相似的” },
+{ en:“similarity”,pos:“n.”,zh:“相似性” },
+{ en:“similarly”,pos:“adv.”,zh:“同樣地” },
+{ en:“aim”,pos:“vt./n.”,zh:“針對；目的” },
+{ en:“impulse”,pos:“n.”,zh:“衝動” },
+{ en:“display”,pos:“vt./n.”,zh:“展示” },
+{ en:“offer”,pos:“n./vt.”,zh:“特價；提供” },
+{ en:“customer”,pos:“n.”,zh:“顧客” },
+{ en:“advantage”,pos:“n.”,zh:“優勢” },
+{ en:“eventually”,pos:“adv.”,zh:“最後” },
+{ en:“trap”,pos:“n./vt.”,zh:“圈套；困住” },
+{ en:“aware”,pos:“adj.”,zh:“意識到的” },
+{ en:“awareness”,pos:“n.”,zh:“意識” },
+{ en:“clever”,pos:“adj.”,zh:“聰明的” },
+{ en:“detailed”,pos:“adj.”,zh:“詳細的” },
+{ en:“detail”,pos:“n.”,zh:“細節” },
+{ en:“messy”,pos:“adj.”,zh:“凌亂的” },
+{ en:“mess”,pos:“n.”,zh:“凌亂” },
+{ en:“express”,pos:“vt.”,zh:“表達” },
+{ en:“expression”,pos:“n.”,zh:“表達；表情” },
+{ en:“opinion”,pos:“n.”,zh:“意見” },
+{ en:“contrast”,pos:“vt./n.”,zh:“對比” },
+{ en:“horror”,pos:“n.”,zh:“恐怖；恐懼” },
+{ en:“horrible”,pos:“adj.”,zh:“可怕的” },
+{ en:“horrify”,pos:“vt.”,zh:“使恐懼” },
+{ en:“innocence”,pos:“n.”,zh:“純真” },
+{ en:“innocent”,pos:“adj.”,zh:“無辜的；純真的” },
+{ en:“violence”,pos:“n.”,zh:“暴力” },
+{ en:“violent”,pos:“adj.”,zh:“暴力的” },
+{ en:“visual”,pos:“adj.”,zh:“視覺的” },
+{ en:“pollution”,pos:“n.”,zh:“汙染” },
+{ en:“pollute”,pos:“vt.”,zh:“汙染” },
+{ en:“permission”,pos:“n.”,zh:“許可” },
+{ en:“permit”,pos:“vt.”,zh:“許可；允許” },
+{ en:“effort”,pos:“n.”,zh:“努力” },
+{ en:“community”,pos:“n.”,zh:“社區” },
+{ en:“associate”,pos:“vt.”,zh:“聯想；聯繫” },
+{ en:“association”,pos:“n.”,zh:“聯想；聯繫” },
+{ en:“criminal”,pos:“adj./n.”,zh:“犯罪的；罪犯” },
+{ en:“crime”,pos:“n.”,zh:“犯罪行為” },
+{ en:“destructive”,pos:“adj.”,zh:“破壞性的” },
+{ en:“destroy”,pos:“vt.”,zh:“破壞” },
+{ en:“destruction”,pos:“n.”,zh:“破壞” },
+];
+
+function shuffle(arr) {
+const a=[…arr];
+for(let i=a.length-1;i>0;i–){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+return a;
+}
+
+function SpeakBtn({ text, label }) {
+const [active, setActive] = useState(false);
+function go() {
+if (!window.speechSynthesis) return;
+window.speechSynthesis.cancel();
+const u = new SpeechSynthesisUtterance(text);
+u.lang = “en-US”; u.rate = 0.82;
+u.onstart = () => setActive(true);
+u.onend = () => setActive(false);
+u.onerror = () => setActive(false);
+window.speechSynthesis.speak(u);
+}
+return (
+<button onClick={go} style={{
+display:“inline-flex”, alignItems:“center”, gap:4,
+background:“none”, border:“1px solid #252530”, borderRadius:6,
+padding:“4px 10px”, cursor:“pointer”, fontFamily:“inherit”, fontSize:12,
+color: active ? “#c8a96e” : “#555”, transition:“color 0.2s”,
+}}>
+<span style={{fontSize:14}}>{active?“🔊”:“🔈”}</span>
+{label}
+</button>
+);
+}
+
+function FillSentence({ sentence, answer, status, userInput }) {
+const parts = sentence.split(”______”);
+return (
+<div style={{ fontSize:15, lineHeight:2, color:”#bbb” }}>
+{parts.map((seg,i) => {
+if (i===parts.length-1) return <span key={i}>{seg}</span>;
+const hint = blankDisplay(answer);
+const revealed = !!status;
+const correct = status===“correct”;
+return (
+<span key={i}>
+{seg}
+<span style={{
+display:“inline-block”, fontFamily:“monospace”, letterSpacing:2,
+padding:“0 8px”, marginInline:2,
+borderBottom:`2px solid ${revealed?(correct?"#6a9f6a":"#b05050"):"#c8a96e"}`,
+color: revealed?(correct?”#6a9f6a”:”#b05050”):”#c8a96e”,
+fontWeight:“bold”, minWidth:64, textAlign:“center”,
+}}>
+{revealed ? (correct ? userInput : answer) : hint}
+</span>
+</span>
+);
+})}
+</div>
+);
+}
+
+export default function App() {
+const [mode, setMode] = useState(“fill”);
+const [range, setRange] = useState(“all”);
+const [queue, setQueue] = useState([]);
+const [idx, setIdx] = useState(0);
+const [input, setInput] = useState(””);
+const [status, setStatus] = useState(null);
+const [score, setScore] = useState({correct:0,wrong:0});
+const [wrongList, setWrongList] = useState([]);
+const [showWrong, setShowWrong] = useState(false);
+const inputRef = useRef(null);
+
+const buildQueue = useCallback((m, r) => {
+let data;
+if (m===“fill”) {
+const a=FILL_A.map(x=>({…x,part:“A”}));
+const b=FILL_B.map(x=>({…x,part:“B”}));
+data = r===“a”?a : r===“b”?b : […a,…b];
+} else {
+const a=WORDS_A.map(x=>({…x,part:“A”}));
+const b=WORDS_B.map(x=>({…x,part:“B”}));
+data = r===“a”?a : r===“b”?b : […a,…b];
+}
+setQueue(shuffle(data));
+setIdx(0); setInput(””); setStatus(null);
+setScore({correct:0,wrong:0}); setWrongList([]); setShowWrong(false);
+},[]);
+
+useEffect(()=>{ buildQueue(mode,range); },[]);
+
+const current = queue[idx];
+const total = queue.length;
+const done = idx >= total;
+const progress = total>0 ? (idx/total)*100 : 0;
+
+useEffect(()=>{
+if (mode===“word” && current) setTimeout(()=>speak(current.en),180);
+},[idx, mode]);
+
+function checkAnswer() {
+if (!current||status) return;
+const raw = input.trim();
+const correct = mode===“fill”
+? current.a.some(a=>a.toLowerCase()===raw.toLowerCase())
+: raw===current.zh;
+setStatus(correct?“correct”:“wrong”);
+if (correct) setScore(s=>({…s,correct:s.correct+1}));
+else { setScore(s=>({…s,wrong:s.wrong+1})); setWrongList(w=>[…w,{…current,yourAnswer:raw}]); }
+}
+
+function skip() {
+if (!current||status) return;
+setStatus(“wrong”);
+setScore(s=>({…s,wrong:s.wrong+1}));
+setWrongList(w=>[…w,{…current,yourAnswer:””}]);
+}
+
+function next() {
+if (idx+1>=total) setIdx(total);
+else { setIdx(i=>i+1); setInput(””); setStatus(null); }
+setTimeout(()=>inputRef.current?.focus(),80);
+}
+
+function handleKey(e) {
+if (e.key===“Enter”) { if (status) next(); else checkAnswer(); }
+}
+
+return (
+<div style={{
+minHeight:“100vh”, background:”#0d0d12”, color:”#e0dcd4”,
+fontFamily:”‘Georgia’,serif”,
+display:“flex”, flexDirection:“column”, alignItems:“center”,
+padding:“22px 16px 60px”,
+}}>
+{/* Header */}
+<div style={{textAlign:“center”,marginBottom:22}}>
+<div style={{fontSize:10,letterSpacing:4,color:”#444”,textTransform:“uppercase”,marginBottom:4}}>Vocabulary Trainer</div>
+<div style={{fontSize:20,fontWeight:“bold”,color:”#f0ebe0”}}>單字練習</div>
 </div>
 
-<script>
-    (function(){
-        "use strict";
+```
+  {/* Mode toggle */}
+  <div style={{width:"100%",maxWidth:500,display:"flex",flexDirection:"column",gap:8,marginBottom:18}}>
+    <div style={{display:"flex",gap:8}}>
+      {[["fill","文意字彙（拼字）"],["word","英翻中（單字）"]].map(([v,label])=>(
+        <button key={v} onClick={()=>{setMode(v);buildQueue(v,range);}} style={{
+          flex:1,padding:"9px 0",borderRadius:8,border:"none",cursor:"pointer",
+          fontFamily:"inherit",fontSize:13,
+          background:mode===v?"#c8a96e":"#181820",
+          color:mode===v?"#0d0d12":"#555",
+          fontWeight:mode===v?"bold":"normal",
+          transition:"all 0.15s",
+        }}>{label}</button>
+      ))}
+    </div>
+    <div style={{display:"flex",gap:8}}>
+      {[["all","全部"],["a","Unit 2"],["b","L06–L09"]].map(([v,label])=>(
+        <button key={v} onClick={()=>{setRange(v);buildQueue(mode,v);}} style={{
+          flex:1,padding:"7px 0",borderRadius:8,border:"none",cursor:"pointer",
+          fontFamily:"inherit",fontSize:12,
+          background:range===v?"#1c1c28":"#131318",
+          color:range===v?"#c8a96e":"#444",
+          borderBottom:range===v?"2px solid #c8a96e":"2px solid transparent",
+          transition:"all 0.15s",
+        }}>{label}</button>
+      ))}
+    </div>
+  </div>
 
-        // ========== 內建單字庫 ==========
-        // 第一冊包含 U1~U6：
-        // U1~U5 = 最初 L01~L05 完整內容
-        // U6 = 後來提供的「單字書U1」31個詞條
-        // 若要新增/修改內建單字，請直接編輯此陣列。
-        const presetDB = [
-            // ===== 第一冊 U1 (原 L01) =====
-            { word: "memorable", chinese: "難忘的", collocation: "", book: "Book1", unit: "U1", type: "word" },
-            { word: "reply", chinese: "回答；回覆", collocation: "reply to, in reply to", book: "Book1", unit: "U1", type: "word" },
-            { word: "yell", chinese: "大喊；大吼", collocation: "yell at", book: "Book1", unit: "U1", type: "word" },
-            { word: "perfect", chinese: "完美的", collocation: "", book: "Book1", unit: "U1", type: "word" },
-            { word: "accidentally", chinese: "意外地；不小心地", collocation: "", book: "Book1", unit: "U1", type: "word" },
-            { word: "failure", chinese: "失敗", collocation: "end in failure", book: "Book1", unit: "U1", type: "word" },
-            { word: "recall", chinese: "記起；回想起", collocation: "", book: "Book1", unit: "U1", type: "word" },
-            { word: "presentation", chinese: "報告；介紹", collocation: "", book: "Book1", unit: "U1", type: "word" },
-            { word: "skip", chinese: "故意不參加；略過", collocation: "skip class", book: "Book1", unit: "U1", type: "word" },
-            { word: "ruin", chinese: "破壞；毀壞", collocation: "fall into ruin", book: "Book1", unit: "U1", type: "word" },
-            { word: "embarrassed", chinese: "尷尬的；難堪的", collocation: "", book: "Book1", unit: "U1", type: "word" },
-            { word: "depressed", chinese: "沮喪的；消沉的", collocation: "", book: "Book1", unit: "U1", type: "word" },
-            { word: "upset", chinese: "使難過；難過的", collocation: "", book: "Book1", unit: "U1", type: "word" },
-            { word: "reflect", chinese: "認真思考；沉思", collocation: "reflect on", book: "Book1", unit: "U1", type: "word" },
-            { word: "remind", chinese: "提醒；使想起", collocation: "remind sb. of sth.", book: "Book1", unit: "U1", type: "word" },
-            { word: "realize", chinese: "了解；領悟", collocation: "", book: "Book1", unit: "U1", type: "word" },
-            { word: "traditional", chinese: "傳統的", collocation: "", book: "Book1", unit: "U1", type: "word" },
-            { word: "fortunately", chinese: "幸運地", collocation: "", book: "Book1", unit: "U1", type: "word" },
-            // L01 片語
-            { word: "the rest of", chinese: "其餘的", collocation: "", book: "Book1", unit: "U1", type: "phrase" },
-            { word: "in person", chinese: "親自", collocation: "", book: "Book1", unit: "U1", type: "phrase" },
-            { word: "take seriously", chinese: "認真看待", collocation: "take...seriously", book: "Book1", unit: "U1", type: "phrase" },
-            { word: "let down", chinese: "讓……失望", collocation: "let...down", book: "Book1", unit: "U1", type: "phrase" },
-            { word: "make sure", chinese: "確保；確定", collocation: "", book: "Book1", unit: "U1", type: "phrase" },
-            { word: "put first", chinese: "認為……最重要", collocation: "put...first", book: "Book1", unit: "U1", type: "phrase" },
-            { word: "dress up", chinese: "裝扮", collocation: "", book: "Book1", unit: "U1", type: "phrase" },
+  {/* Progress */}
+  <div style={{width:"100%",maxWidth:500,marginBottom:16}}>
+    <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#444",marginBottom:5}}>
+      <span>{done?total:idx+1} / {total}</span>
+      <span style={{color:"#5a8f5a"}}>✓ {score.correct}</span>
+      <span style={{color:"#9f5050"}}>✗ {score.wrong}</span>
+    </div>
+    <div style={{height:3,background:"#1c1c28",borderRadius:2}}>
+      <div style={{height:"100%",width:`${progress}%`,background:"#c8a96e",borderRadius:2,transition:"width 0.3s"}}/>
+    </div>
+  </div>
 
-            // ===== 第一冊 U2 (原 L02) =====
-            { word: "relationship", chinese: "戀愛關係；關係", collocation: "in a relationship", book: "Book1", unit: "U2", type: "word" },
-            { word: "satisfying", chinese: "令人滿意的", collocation: "", book: "Book1", unit: "U2", type: "word" },
-            { word: "inspire", chinese: "激勵；激發靈感", collocation: "inspire sb. to do", book: "Book1", unit: "U2", type: "word" },
-            { word: "connect", chinese: "建立良好關係；連接", collocation: "connect with", book: "Book1", unit: "U2", type: "word" },
-            { word: "communicate", chinese: "溝通", collocation: "", book: "Book1", unit: "U2", type: "word" },
-            { word: "introduce", chinese: "使初次體驗；介紹", collocation: "introduce sb. to sth.", book: "Book1", unit: "U2", type: "word" },
-            { word: "throughout", chinese: "自始至終", collocation: "", book: "Book1", unit: "U2", type: "word" },
-            { word: "message", chinese: "訊息", collocation: "text message", book: "Book1", unit: "U2", type: "word" },
-            { word: "refresh", chinese: "刷新；使恢復精神", collocation: "refresh oneself", book: "Book1", unit: "U2", type: "word" },
-            { word: "romantic", chinese: "浪漫的", collocation: "", book: "Book1", unit: "U2", type: "word" },
-            { word: "focus", chinese: "專注；專心", collocation: "focus on", book: "Book1", unit: "U2", type: "word" },
-            { word: "ignore", chinese: "忽略", collocation: "", book: "Book1", unit: "U2", type: "word" },
-            { word: "attention", chinese: "注意力", collocation: "pay attention to", book: "Book1", unit: "U2", type: "word" },
-            { word: "deny", chinese: "否認", collocation: "deny doing", book: "Book1", unit: "U2", type: "word" },
-            { word: "respond", chinese: "回應", collocation: "respond to, in response to", book: "Book1", unit: "U2", type: "word" },
-            { word: "disappointed", chinese: "感到失望的", collocation: "", book: "Book1", unit: "U2", type: "word" },
-            { word: "personally", chinese: "針對某人地", collocation: "take sth. personally", book: "Book1", unit: "U2", type: "word" },
-            // L02 片語
-            { word: "in fact", chinese: "事實上", collocation: "", book: "Book1", unit: "U2", type: "phrase" },
-            { word: "go through", chinese: "徹底讀過", collocation: "", book: "Book1", unit: "U2", type: "phrase" },
-            { word: "in case", chinese: "以防萬一", collocation: "", book: "Book1", unit: "U2", type: "phrase" },
-            { word: "in addition", chinese: "除此之外", collocation: "", book: "Book1", unit: "U2", type: "phrase" },
-            { word: "hang out", chinese: "一起出去、廝混", collocation: "", book: "Book1", unit: "U2", type: "phrase" },
-            { word: "turn to", chinese: "轉向；求助於", collocation: "", book: "Book1", unit: "U2", type: "phrase" },
-            { word: "take personally", chinese: "認為是針對個人", collocation: "take...personally", book: "Book1", unit: "U2", type: "phrase" },
-
-            // ===== 第一冊 U3 (原 L03) =====
-            { word: "wonder", chinese: "想知道", collocation: "wonder if / wonder about", book: "Book1", unit: "U3", type: "word" },
-            { word: "amazing", chinese: "令人大感驚奇", collocation: "It's amazing how...", book: "Book1", unit: "U3", type: "word" },
-            { word: "average", chinese: "平均；平均數；一般的", collocation: "above average, on average", book: "Book1", unit: "U3", type: "word" },
-            { word: "therefore", chinese: "因此", collocation: "", book: "Book1", unit: "U3", type: "word" },
-            { word: "nap", chinese: "小睡", collocation: "take a nap", book: "Book1", unit: "U3", type: "word" },
-            { word: "float", chinese: "漂浮；漂流", collocation: "float on water", book: "Book1", unit: "U3", type: "word" },
-            { word: "avoid", chinese: "避免", collocation: "avoid doing sth.", book: "Book1", unit: "U3", type: "word" },
-            { word: "surface", chinese: "表面", collocation: "on the surface, below the surface", book: "Book1", unit: "U3", type: "word" },
-            { word: "breathe", chinese: "呼吸", collocation: "breathe in; out of breath", book: "Book1", unit: "U3", type: "word" },
-            { word: "awake", chinese: "醒著的；醒來", collocation: "stay awake, awake from sleep", book: "Book1", unit: "U3", type: "word" },
-            { word: "impressive", chinese: "令人印象深刻的", collocation: "leave an impression", book: "Book1", unit: "U3", type: "word" },
-            { word: "distance", chinese: "距離", collocation: "within walking distance", book: "Book1", unit: "U3", type: "word" },
-            { word: "journey", chinese: "旅行", collocation: "go on a journey", book: "Book1", unit: "U3", type: "word" },
-            { word: "flight", chinese: "飛行；航班", collocation: "take flight", book: "Book1", unit: "U3", type: "word" },
-            { word: "variety", chinese: "多種樣式", collocation: "a variety of", book: "Book1", unit: "U3", type: "word" },
-            { word: "creature", chinese: "生物", collocation: "", book: "Book1", unit: "U3", type: "word" },
-            { word: "expert", chinese: "專家", collocation: "an expert in/at", book: "Book1", unit: "U3", type: "word" },
-            { word: "survive", chinese: "生存；倖存", collocation: "survive from", book: "Book1", unit: "U3", type: "word" },
-            // L03 片語
-            { word: "hold on to", chinese: "緊緊抓住", collocation: "", book: "Book1", unit: "U3", type: "phrase" },
-            { word: "look out for", chinese: "當心...出現", collocation: "", book: "Book1", unit: "U3", type: "phrase" },
-            { word: "be on the lookout for", chinese: "保持警戒", collocation: "", book: "Book1", unit: "U3", type: "phrase" },
-            { word: "for example", chinese: "舉例來說", collocation: "", book: "Book1", unit: "U3", type: "phrase" },
-            { word: "according to", chinese: "根據", collocation: "", book: "Book1", unit: "U3", type: "phrase" },
-            { word: "up to", chinese: "高達", collocation: "", book: "Book1", unit: "U3", type: "phrase" },
-
-            // ===== 第一冊 U4 (原 L04) =====
-            { word: "sensitive", chinese: "敏感的", collocation: "be sensitive to", book: "Book1", unit: "U4", type: "word" },
-            { word: "keen", chinese: "敏銳的；渴望的", collocation: "keen sense of, be keen on", book: "Book1", unit: "U4", type: "word" },
-            { word: "detect", chinese: "偵測到；察覺", collocation: "", book: "Book1", unit: "U4", type: "word" },
-            { word: "item", chinese: "一項物品", collocation: "", book: "Book1", unit: "U4", type: "word" },
-            { word: "accomplish", chinese: "達成", collocation: "", book: "Book1", unit: "U4", type: "word" },
-            { word: "disease", chinese: "疾病", collocation: "heart disease", book: "Book1", unit: "U4", type: "word" },
-            { word: "infected", chinese: "遭感染的", collocation: "", book: "Book1", unit: "U4", type: "word" },
-            { word: "locate", chinese: "找到……的位置", collocation: "", book: "Book1", unit: "U4", type: "word" },
-            { word: "reward", chinese: "獎勵；報酬", collocation: "reward sb. with", book: "Book1", unit: "U4", type: "word" },
-            { word: "ability", chinese: "能力", collocation: "have the ability to", book: "Book1", unit: "U4", type: "word" },
-            { word: "predict", chinese: "預測", collocation: "", book: "Book1", unit: "U4", type: "word" },
-            { word: "manage", chinese: "設法成功做到；管理", collocation: "manage to do", book: "Book1", unit: "U4", type: "word" },
-            { word: "create", chinese: "創造；產生出", collocation: "", book: "Book1", unit: "U4", type: "word" },
-            { word: "expose", chinese: "使接觸；使體驗", collocation: "be exposed to", book: "Book1", unit: "U4", type: "word" },
-            { word: "perform", chinese: "做某事；表演", collocation: "perform a task", book: "Book1", unit: "U4", type: "word" },
-            { word: "behavior", chinese: "行為", collocation: "", book: "Book1", unit: "U4", type: "word" },
-            { word: "alert", chinese: "警示；警覺的", collocation: "stay alert", book: "Book1", unit: "U4", type: "word" },
-            { word: "complete", chinese: "已完成的；完整的", collocation: "", book: "Book1", unit: "U4", type: "word" },
-            { word: "assign", chinese: "指派", collocation: "assign sb. to do", book: "Book1", unit: "U4", type: "word" },
-            { word: "specific", chinese: "特定的", collocation: "", book: "Book1", unit: "U4", type: "word" },
-            // L04 片語
-            { word: "due to", chinese: "因為", collocation: "", book: "Book1", unit: "U4", type: "phrase" },
-            { word: "all of a sudden", chinese: "突然間", collocation: "", book: "Book1", unit: "U4", type: "phrase" },
-            { word: "turn out", chinese: "結果是", collocation: "", book: "Book1", unit: "U4", type: "phrase" },
-            { word: "come across", chinese: "遇到；偶然碰見", collocation: "", book: "Book1", unit: "U4", type: "phrase" },
-            { word: "carry out", chinese: "執行；進行", collocation: "", book: "Book1", unit: "U4", type: "phrase" },
-
-            // ===== 第一冊 U5 (原 L05) =====
-            { word: "plastic", chinese: "塑膠(製)的；塑膠", collocation: "plastic bottles, made of plastic", book: "Book1", unit: "U5", type: "word" },
-            { word: "convenience", chinese: "便利", collocation: "for the convenience of", book: "Book1", unit: "U5", type: "word" },
-            { word: "eagerly", chinese: "渴望地", collocation: "be eager for", book: "Book1", unit: "U5", type: "word" },
-            { word: "surround", chinese: "圍繞", collocation: "be surrounded by", book: "Book1", unit: "U5", type: "word" },
-            { word: "drift", chinese: "漂流", collocation: "drift toward", book: "Book1", unit: "U5", type: "word" },
-            { word: "envy", chinese: "羨慕", collocation: "envy sb., with envy", book: "Book1", unit: "U5", type: "word" },
-            { word: "crowded", chinese: "擠滿的；擁擠的", collocation: "be crowded with", book: "Book1", unit: "U5", type: "word" },
-            { word: "obviously", chinese: "顯然", collocation: "", book: "Book1", unit: "U5", type: "word" },
-            { word: "product", chinese: "產品", collocation: "", book: "Book1", unit: "U5", type: "word" },
-            { word: "consume", chinese: "吃喝；消耗", collocation: "consume time", book: "Book1", unit: "U5", type: "word" },
-            { word: "poisonous", chinese: "有毒的", collocation: "poisonous to", book: "Book1", unit: "U5", type: "word" },
-            { word: "substance", chinese: "物質", collocation: "", book: "Book1", unit: "U5", type: "word" },
-            { word: "recycling", chinese: "回收", collocation: "", book: "Book1", unit: "U5", type: "word" },
-            { word: "harm", chinese: "傷害", collocation: "do harm to, harmful to", book: "Book1", unit: "U5", type: "word" },
-            { word: "environment", chinese: "自然環境；環境", collocation: "natural environment", book: "Book1", unit: "U5", type: "word" },
-            { word: "properly", chinese: "適當地", collocation: "", book: "Book1", unit: "U5", type: "word" },
-            // L05 片語
-            { word: "come along", chinese: "到達；出現", collocation: "", book: "Book1", unit: "U5", type: "phrase" },
-            { word: "pack up", chinese: "收拾；打包", collocation: "pack...up", book: "Book1", unit: "U5", type: "phrase" },
-            { word: "on one's own", chinese: "獨自；靠自己", collocation: "", book: "Book1", unit: "U5", type: "phrase" },
-            { word: "for a while", chinese: "一陣子", collocation: "", book: "Book1", unit: "U5", type: "phrase" },
-            { word: "end up", chinese: "最後結果是", collocation: "", book: "Book1", unit: "U5", type: "phrase" },
-
-            // ===== 第一冊 U6 (您提供的「單字書U1」31個詞條) =====
-            { word: "federal", chinese: "聯邦的", collocation: "federal funding; the federal government of the United States", book: "Book1", unit: "U6", type: "word" },
-            { word: "stock", chinese: "股票；存貨", collocation: "stock market; in stock; out of stock; stock up on", book: "Book1", unit: "U6", type: "word" },
-            { word: "series", chinese: "系列", collocation: "a series of; TV series", book: "Book1", unit: "U6", type: "word" },
-            { word: "saint", chinese: "聖人", collocation: "be sainted for", book: "Book1", unit: "U6", type: "word" },
-            { word: "corporate", chinese: "企業的；合作的", collocation: "corporation; cooperation; enterprise", book: "Book1", unit: "U6", type: "word" },
-            { word: "commission", chinese: "佣金；委任", collocation: "get a commission on; on commission", book: "Book1", unit: "U6", type: "word" },
-            { word: "conduct", chinese: "處理；指揮；行為", collocation: "conduct an investigation; conduct an experiment", book: "Book1", unit: "U6", type: "word" },
-            { word: "recommend", chinese: "建議", collocation: "recommend sb to V; recommend that S + VR", book: "Book1", unit: "U6", type: "word" },
-            { word: "grant", chinese: "授予；給予；補助金", collocation: "grant sb sth; take it for granted that", book: "Book1", unit: "U6", type: "word" },
-            { word: "interpretation", chinese: "詮釋；口譯", collocation: "simultaneous interpretation; interpret A as B", book: "Book1", unit: "U6", type: "word" },
-            { word: "communist", chinese: "共產的；共產主義者", collocation: "communism; capitalism", book: "Book1", unit: "U6", type: "word" },
-            { word: "mount", chinese: "爬上；騎在", collocation: "mount a ladder; mount a horse", book: "Book1", unit: "U6", type: "word" },
-            { word: "saddle", chinese: "馬鞍；車座", collocation: "spur; harness; rein", book: "Book1", unit: "U6", type: "word" },
-            { word: "confront", chinese: "使面對", collocation: "be confronted with; confrontation", book: "Book1", unit: "U6", type: "word" },
-            { word: "personnel", chinese: "人事部；人員", collocation: "personnel department; human resources", book: "Book1", unit: "U6", type: "word" },
-            { word: "distinction", chinese: "卓越；區別", collocation: "graduate with distinction; distinctive", book: "Book1", unit: "U6", type: "word" },
-            { word: "entitle", chinese: "給予權力；命名", collocation: "entitle sb to V; be entitled to", book: "Book1", unit: "U6", type: "word" },
-            { word: "rifle", chinese: "來福槍；快速翻找", collocation: "rifle through", book: "Book1", unit: "U6", type: "word" },
-            { word: "meantime", chinese: "期間", collocation: "in the meantime", book: "Book1", unit: "U6", type: "word" },
-            { word: "adore", chinese: "喜愛；崇拜", collocation: "adoration; adorable", book: "Book1", unit: "U6", type: "word" },
-            { word: "abortion", chinese: "墮胎", collocation: "have an abortion", book: "Book1", unit: "U6", type: "word" },
-            { word: "barefoot", chinese: "光腳的", collocation: "walk barefoot", book: "Book1", unit: "U6", type: "word" },
-            { word: "fluency", chinese: "流利", collocation: "fluent; fluently", book: "Book1", unit: "U6", type: "word" },
-            { word: "foul", chinese: "骯髒的；犯規", collocation: "foul mood; commit a foul", book: "Book1", unit: "U6", type: "word" },
-            { word: "abnormal", chinese: "不正常的", collocation: "unusual; normal", book: "Book1", unit: "U6", type: "word" },
-            { word: "abolish", chinese: "廢除", collocation: "do away with", book: "Book1", unit: "U6", type: "word" },
-            { word: "commentary", chinese: "評論；解說", collocation: "play-by-play commentary", book: "Book1", unit: "U6", type: "word" },
-            { word: "diplomatic", chinese: "外交的；圓滑的", collocation: "diplomatic relations", book: "Book1", unit: "U6", type: "word" },
-            { word: "innovation", chinese: "創新", collocation: "innovative", book: "Book1", unit: "U6", type: "word" },
-            { word: "perceive", chinese: "察覺；認為", collocation: "perceive A as B", book: "Book1", unit: "U6", type: "word" },
-            { word: "proclaim", chinese: "宣稱；宣布", collocation: "proclaim that", book: "Book1", unit: "U6", type: "word" },
-            { word: "diaper", chinese: "尿布", collocation: "", book: "Book1", unit: "U6", type: "word" },
-        ];
-
-        // ========== 全域狀態 ==========
-        let customWords = [];
-        const STORAGE_CUSTOM = 'vocab_book_unit_custom_v4';
-        const STORAGE_MARKS = 'vocab_book_unit_marks_v4';
-        let markedWords = new Set();
-
-        let currentMode = 'read';
-        let currentBook = 'Book1';
-        let selectedUnits = new Set(['U1']); // 預設勾選第一個單元
-
-        let currentList = [];
-        let currentIdx = 0;
-        let quizCorrect = 0, quizAttempts = 0;
-
-        // DOM
-        const contentArea = document.getElementById('contentArea');
-        const bookSelect = document.getElementById('bookSelect');
-        const modeBtns = document.querySelectorAll('.mode-btn');
-        const quizFilterRow = document.getElementById('quizFilterRow');
-        const onlyMarkedCheck = document.getElementById('onlyMarkedCheck');
-        const unitCheckboxesDiv = document.getElementById('unitCheckboxes');
-        const unitSummary = document.getElementById('unitSummary');
-        const batchPanel = document.getElementById('batchAddPanel');
-
-        // ---------- 資料載入 ----------
-        function loadData() {
-            const c = localStorage.getItem(STORAGE_CUSTOM);
-            if (c) { try { customWords = JSON.parse(c); } catch(e){ customWords = []; } }
-            const m = localStorage.getItem(STORAGE_MARKS);
-            if (m) { try { markedWords = new Set(JSON.parse(m)); } catch(e){ markedWords = new Set(); } }
-        }
-        function saveCustom() { localStorage.setItem(STORAGE_CUSTOM, JSON.stringify(customWords)); }
-        function saveMarks() { localStorage.setItem(STORAGE_MARKS, JSON.stringify([...markedWords])); }
-
-        function getAllWords() { return [...presetDB, ...customWords]; }
-
-        // 取得當前冊別可用單元
-        function getAvailableUnits(book) {
-            const words = getAllWords().filter(w => w.book === book);
-            return [...new Set(words.map(w => w.unit).filter(u => u))].sort();
-        }
-
-        // 根據篩選條件取得單字 (閱讀/測驗用)
-        function getFilteredWords() {
-            let words = getAllWords().filter(w => w.book === currentBook && selectedUnits.has(w.unit));
-            if (currentMode === 'quiz' && onlyMarkedCheck.checked) {
-                words = words.filter(w => markedWords.has(w.word));
-            }
-            return words;
-        }
-
-        // 渲染單元勾選區
-        function renderUnitCheckboxes() {
-            const units = getAvailableUnits(currentBook);
-            let html = '';
-            units.forEach(u => {
-                const checked = selectedUnits.has(u) ? 'checked' : '';
-                html += `<label class="unit-checkbox"><input type="checkbox" value="${u}" ${checked}> ${u}</label>`;
-            });
-            unitCheckboxesDiv.innerHTML = html || '<span style="color:#888;">尚無單元</span>';
-            document.querySelectorAll('#unitCheckboxes input').forEach(cb => {
-                cb.addEventListener('change', e => {
-                    if (e.target.checked) selectedUnits.add(e.target.value);
-                    else selectedUnits.delete(e.target.value);
-                    updateUnitSummary();
-                    renderContent();
-                });
-            });
-            updateUnitSummary();
-        }
-
-        function updateUnitSummary() {
-            const cnt = getFilteredWords().length;
-            unitSummary.innerText = `已選 ${selectedUnits.size} 個單元，共 ${cnt} 個單字`;
-        }
-
-        function toggleMark(word) {
-            if (markedWords.has(word)) markedWords.delete(word);
-            else markedWords.add(word);
-            saveMarks();
-        }
-
-        // 渲染主內容
-        function renderContent() {
-            if (currentMode === 'read') renderReadMode();
-            else if (currentMode === 'quiz') renderQuizMode();
-            else if (currentMode === 'book') renderBookMode();
-            batchPanel.style.display = currentMode === 'book' ? 'block' : 'none';
-        }
-
-        // ----- 閱讀模式 -----
-        function renderReadMode() {
-            const words = getFilteredWords();
-            currentList = words.length ? words : [{ word: '尚無單字', chinese: '請勾選單元', collocation: '', unit: '' }];
-            currentIdx = 0;
-            const item = currentList[0];
-            const isMarked = markedWords.has(item.word);
-            let html = `
-                <div class="card">
-                    <div class="word-header">
-                        <span class="english-word">${item.word}</span>
-                        <button class="mark-btn ${isMarked ? 'marked' : ''}" id="toggleMarkBtn">★</button>
+  {/* Card */}
+  <div style={{
+    width:"100%",maxWidth:500,
+    background:"#12121a",
+    borderRadius:16,
+    padding:"26px 22px 22px",
+    boxShadow:"0 8px 48px rgba(0,0,0,0.7)",
+    minHeight:320,
+    display:"flex",flexDirection:"column",justifyContent:"space-between",
+  }}>
+    {done ? (
+      <div style={{textAlign:"center"}}>
+        <div style={{fontSize:40,marginBottom:8}}>
+          {score.wrong===0?"🎯":score.correct>=score.wrong?"👍":"📚"}
+        </div>
+        <div style={{fontSize:18,fontWeight:"bold",color:"#c8a96e",marginBottom:4}}>完成！</div>
+        <div style={{fontSize:13,color:"#555",marginBottom:22}}>
+          答對 {score.correct} 題 · 答錯 {score.wrong} 題
+        </div>
+        {wrongList.length>0&&(
+          <button onClick={()=>setShowWrong(s=>!s)} style={{
+            background:"none",border:"1px solid #222",borderRadius:8,
+            padding:"7px 18px",color:"#9f5050",cursor:"pointer",
+            fontSize:13,fontFamily:"inherit",marginBottom:14
+          }}>{showWrong?"收起":"查看"} 錯題（{wrongList.length}）</button>
+        )}
+        {showWrong&&(
+          <div style={{textAlign:"left",marginBottom:20,maxHeight:240,overflowY:"auto"}}>
+            {wrongList.map((w,i)=>(
+              <div key={i} style={{borderBottom:"1px solid #1a1a22",paddingBottom:10,marginBottom:10}}>
+                {mode==="fill"?(
+                  <>
+                    <div style={{fontSize:12,color:"#666",lineHeight:1.6,marginBottom:3}}>
+                      {w.q.replace("______",`【${w.a[0]}】`)}
                     </div>
-                    <div class="chinese-block">${item.chinese}</div>
-                    <div class="collocation">${item.collocation || ' '}</div>
-                    <div class="progress-indicator">
-                        <span>${currentIdx+1} / ${currentList.length}</span>
-                        <span>${item.unit || ''}</span>
+                    <div style={{fontSize:12}}>
+                      <span style={{color:"#9f5050"}}>你：{w.yourAnswer||"（空白）"}</span>
+                      <span style={{color:"#5a8f5a",marginLeft:10}}>正解：{w.a[0]}</span>
                     </div>
-                    <div class="action-row">
-                        <button class="btn" id="speakBtn">朗讀</button>
-                        <button class="btn" id="prevBtn">上一個</button>
-                        <button class="btn" id="nextBtn">下一個</button>
+                  </>
+                ):(
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div>
+                      <span style={{fontSize:15,color:"#e0dcd4"}}>{w.en}</span>
+                      <span style={{fontSize:11,color:"#444",marginLeft:6}}>{w.pos}</span>
                     </div>
-                    <div class="action-row">
-                        <button class="btn" id="speakAllBtn">連續朗讀全部</button>
+                    <div style={{fontSize:12,textAlign:"right"}}>
+                      <div style={{color:"#9f5050"}}>你：{w.yourAnswer||"（空白）"}</div>
+                      <div style={{color:"#5a8f5a"}}>正解：{w.zh}</div>
                     </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>buildQueue(mode,range)} style={{
+            flex:1,padding:"11px 0",borderRadius:10,border:"none",cursor:"pointer",
+            background:"#c8a96e",color:"#0d0d12",fontWeight:"bold",fontSize:14,fontFamily:"inherit"
+          }}>再練一次</button>
+          {wrongList.length>0&&(
+            <button onClick={()=>{
+              setQueue(shuffle([...wrongList]));
+              setIdx(0);setInput("");setStatus(null);
+              setScore({correct:0,wrong:0});setWrongList([]);setShowWrong(false);
+            }} style={{
+              flex:1,padding:"11px 0",borderRadius:10,border:"none",cursor:"pointer",
+              background:"#1c1c28",color:"#c8a96e",fontWeight:"bold",fontSize:14,fontFamily:"inherit"
+            }}>只練錯題</button>
+          )}
+        </div>
+      </div>
+    ) : current ? (
+      <>
+        <div>
+          <div style={{fontSize:10,letterSpacing:3,color:"#383848",textTransform:"uppercase",marginBottom:14}}>
+            {mode==="fill"?"Fill in the Blank":"English → Chinese"} · Part {current.part}
+          </div>
+
+          {mode==="fill" ? (
+            <div style={{marginBottom:16}}>
+              <FillSentence
+                sentence={current.q}
+                answer={current.a[0]}
+                status={status}
+                userInput={input}
+              />
+              <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
+                <SpeakBtn text={current.q.replace("______",current.a[0])} label="播放例句"/>
+                <SpeakBtn text={current.a[0]} label="播放單字"/>
+              </div>
+            </div>
+          ) : (
+            <div style={{textAlign:"center",padding:"8px 0 18px"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:6}}>
+                <span style={{fontSize:34,fontWeight:"bold",color:"#f0ebe0",letterSpacing:1}}>
+                  {current.en}
+                </span>
+                <SpeakBtn text={current.en} label=""/>
+              </div>
+              <div style={{fontSize:12,color:"#444"}}>{current.pos}</div>
+              {status&&(
+                <div style={{marginTop:14,fontSize:22,fontWeight:"bold",
+                  color:status==="correct"?"#5a8f5a":"#9f5050"}}>
+                  {status==="correct"?input:current.zh}
                 </div>
-            `;
-            contentArea.innerHTML = html;
-            if (words.length) {
-                document.getElementById('speakBtn').addEventListener('click', () => speakWord(currentList[currentIdx].word));
-                document.getElementById('prevBtn').addEventListener('click', () => navigateRead(-1));
-                document.getElementById('nextBtn').addEventListener('click', () => navigateRead(1));
-                document.getElementById('speakAllBtn').addEventListener('click', speakAll);
-                document.getElementById('toggleMarkBtn').addEventListener('click', () => {
-                    toggleMark(currentList[currentIdx].word);
-                    renderReadMode();
-                });
-            }
-        }
+              )}
+            </div>
+          )}
 
-        function navigateRead(delta) {
-            if (!currentList.length) return;
-            currentIdx = (currentIdx + delta + currentList.length) % currentList.length;
-            renderReadMode();
-        }
+          {!status&&(
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={e=>setInput(e.target.value)}
+              onKeyDown={handleKey}
+              placeholder={mode==="fill"?"拼出單字…":"輸入中文意思…"}
+              autoFocus
+              style={{
+                width:"100%",boxSizing:"border-box",
+                background:"#0d0d12",
+                border:"2px solid #1e1e2c",
+                borderRadius:10,padding:"11px 14px",
+                color:"#e0dcd4",fontSize:16,fontFamily:"monospace",
+                outline:"none",
+              }}
+            />
+          )}
 
-        function speakWord(word) {
-            if (!word || word === '尚無單字') return;
-            const u = new SpeechSynthesisUtterance(word);
-            u.lang = 'en-US';
-            speechSynthesis.speak(u);
-        }
+          {status&&(
+            <div style={{marginTop:10,fontSize:14,fontWeight:"bold",
+              color:status==="correct"?"#5a8f5a":"#9f5050"}}>
+              {status==="correct"
+                ? "✓ 正確！"
+                : `✗ 正解：${mode==="fill"?current.a[0]:current.zh}`}
+              {status==="wrong"&&input&&(
+                <span style={{color:"#555",fontWeight:"normal",fontSize:12,marginLeft:8}}>
+                  （你輸入：{input}）
+                </span>
+              )}
+            </div>
+          )}
+        </div>
 
-        function speakAll() {
-            if (!currentList.length) return;
-            let i = 0;
-            function next() {
-                if (i >= currentList.length) return;
-                const w = currentList[i].word;
-                if (w && w !== '尚無單字') {
-                    const u = new SpeechSynthesisUtterance(w);
-                    u.lang = 'en-US';
-                    u.onend = () => { i++; next(); };
-                    speechSynthesis.speak(u);
-                } else { i++; next(); }
-            }
-            speechSynthesis.cancel();
-            next();
-        }
+        <div style={{display:"flex",gap:8,marginTop:20}}>
+          {!status?(
+            <>
+              <button onClick={skip} style={{
+                padding:"10px 16px",borderRadius:10,
+                border:"1px solid #1e1e2c",background:"none",
+                color:"#444",cursor:"pointer",fontSize:13,fontFamily:"inherit"
+              }}>跳過</button>
+              <button onClick={checkAnswer} style={{
+                flex:1,padding:"10px 0",borderRadius:10,border:"none",
+                background:"#c8a96e",color:"#0d0d12",
+                fontWeight:"bold",fontSize:14,cursor:"pointer",fontFamily:"inherit"
+              }}>確認</button>
+            </>
+          ):(
+            <button onClick={next} style={{
+              flex:1,padding:"11px 0",borderRadius:10,border:"none",
+              background:"#1c1c28",color:"#c8a96e",
+              fontWeight:"bold",fontSize:14,cursor:"pointer",fontFamily:"inherit"
+            }}>下一題 →</button>
+          )}
+        </div>
+      </>
+    ):null}
+  </div>
+  <div style={{marginTop:14,fontSize:11,color:"#2a2a38"}}>Enter 確認 · Enter 下一題</div>
+</div>
+```
 
-        // ----- 測驗模式 (不顯示搭配詞) -----
-        function renderQuizMode() {
-            const words = getFilteredWords();
-            currentList = words.length ? words : [{ word: '無單字', chinese: '沒有可測單字', collocation: '' }];
-            currentIdx = 0;
-            quizCorrect = 0; quizAttempts = 0;
-            const item = currentList[0];
-            let html = `
-                <div class="card">
-                    <div class="chinese-block" style="font-size:2rem;">${item.chinese}</div>
-                    <div class="progress-indicator">
-                        <span>${currentIdx+1} / ${currentList.length}</span>
-                        <span id="quizScore">正確 ${quizCorrect} / ${quizAttempts}</span>
-                    </div>
-                    <input type="text" class="spell-input" id="quizInput" placeholder="輸入英文" autocomplete="off">
-                    <div class="action-row">
-                        <button class="btn" id="quizCheckBtn">檢查</button>
-                        <button class="btn" id="quizNextBtn">下一題</button>
-                    </div>
-                    <div class="feedback" id="quizFeedback"></div>
-                </div>
-            `;
-            contentArea.innerHTML = html;
-            if (words.length) {
-                document.getElementById('quizCheckBtn').addEventListener('click', checkQuiz);
-                document.getElementById('quizNextBtn').addEventListener('click', nextQuiz);
-                document.getElementById('quizInput').addEventListener('keypress', e => { if(e.key==='Enter') checkQuiz(); });
-            }
-        }
-
-        function checkQuiz() {
-            const item = currentList[currentIdx];
-            if (!item || item.word === '無單字') return;
-            const ans = document.getElementById('quizInput').value.trim();
-            quizAttempts++;
-            if (ans.toLowerCase() === item.word.toLowerCase()) {
-                quizCorrect++;
-                document.getElementById('quizFeedback').innerHTML = `<span class="correct">正確！</span>`;
-                document.getElementById('quizScore').innerText = `正確 ${quizCorrect} / ${quizAttempts}`;
-                setTimeout(() => nextQuiz(), 400);
-            } else {
-                document.getElementById('quizFeedback').innerHTML = `<span class="wrong">錯誤，正確：${item.word}</span>`;
-                document.getElementById('quizScore').innerText = `正確 ${quizCorrect} / ${quizAttempts}`;
-            }
-        }
-
-        function nextQuiz() {
-            if (!currentList.length) return;
-            currentIdx = (currentIdx + 1) % currentList.length;
-            const item = currentList[currentIdx];
-            document.querySelector('.chinese-block').innerText = item.chinese;
-            document.querySelector('.progress-indicator span:first-child').innerText = `${currentIdx+1} / ${currentList.length}`;
-            document.getElementById('quizInput').value = '';
-            document.getElementById('quizFeedback').innerHTML = '';
-        }
-
-        // ----- 單字書模式 (列表瀏覽) -----
-        function renderBookMode() {
-            let words = getAllWords().filter(w => w.book === currentBook);
-            let html = `<div style="margin-bottom:12px;"><strong>${currentBook} 全部單字 (${words.length})</strong></div>`;
-            html += `<div class="word-list">`;
-            if (!words.length) html += `<div class="empty-msg">尚無單字</div>`;
-            else {
-                words.forEach(item => {
-                    const isMarked = markedWords.has(item.word);
-                    const isCustom = customWords.some(c => c.word === item.word && c.book === item.book && c.unit === item.unit);
-                    html += `
-                        <div class="list-item">
-                            <div class="info"><span class="word">${item.word}</span> — ${item.chinese} ${item.collocation ? '· '+item.collocation : ''} <span style="color:#888;">(${item.unit})</span></div>
-                            <button class="small-btn mark-toggle" data-word="${item.word}">${isMarked ? '★取消' : '☆標記'}</button>
-                            <button class="small-btn speak-item" data-word="${item.word}">朗讀</button>
-                            ${isCustom ? `<button class="small-btn delete-custom" data-word="${item.word}" data-unit="${item.unit}">刪除</button>` : ''}
-                        </div>
-                    `;
-                });
-            }
-            html += `</div>`;
-            contentArea.innerHTML = html;
-            document.querySelectorAll('.speak-item').forEach(b => b.addEventListener('click', e => speakWord(e.target.dataset.word)));
-            document.querySelectorAll('.mark-toggle').forEach(b => b.addEventListener('click', e => {
-                toggleMark(e.target.dataset.word);
-                renderBookMode();
-            }));
-            document.querySelectorAll('.delete-custom').forEach(b => b.addEventListener('click', e => {
-                const w = e.target.dataset.word;
-                const u = e.target.dataset.unit;
-                customWords = customWords.filter(c => !(c.word === w && c.book === currentBook && c.unit === u));
-                saveCustom();
-                renderBookMode();
-                renderUnitCheckboxes();
-            }));
-        }
-
-        // 批量新增
-        function batchAddWords() {
-            const book = document.getElementById('customBookSelect').value;
-            const unit = document.getElementById('customUnitInput').value.trim();
-            if (!unit) { alert('請輸入單元'); return; }
-            const text = document.getElementById('batchInput').value.trim();
-            text.split('\n').forEach(line => {
-                const p = line.split(',').map(s => s.trim());
-                if (p.length >= 2) {
-                    const word = p[0], chinese = p[1], collocation = p[2] || '';
-                    if (word && chinese) {
-                        customWords.push({ word, chinese, collocation, book, unit, type: 'word' });
-                    }
-                }
-            });
-            saveCustom();
-            document.getElementById('batchInput').value = '';
-            if (currentMode === 'book') renderBookMode();
-            renderUnitCheckboxes();
-            if (currentBook === book && !selectedUnits.has(unit)) {
-                selectedUnits.add(unit);
-                renderUnitCheckboxes();
-                renderContent();
-            }
-        }
-
-        // 初始化
-        function init() {
-            loadData();
-            renderUnitCheckboxes();
-            renderContent();
-
-            bookSelect.addEventListener('change', e => {
-                currentBook = e.target.value;
-                const units = getAvailableUnits(currentBook);
-                selectedUnits.clear();
-                if (units.length) selectedUnits.add(units[0]);
-                renderUnitCheckboxes();
-                renderContent();
-            });
-
-            modeBtns.forEach(btn => btn.addEventListener('click', () => {
-                modeBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentMode = btn.dataset.mode;
-                quizFilterRow.style.display = currentMode === 'quiz' ? 'flex' : 'none';
-                renderContent();
-            }));
-
-            onlyMarkedCheck.addEventListener('change', () => {
-                if (currentMode === 'quiz') renderQuizMode();
-            });
-
-            document.getElementById('batchAddBtn').addEventListener('click', batchAddWords);
-        }
-
-        init();
-    })();
-</script>
-</body>
-</html>
+);
+}
